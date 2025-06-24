@@ -1,9 +1,9 @@
 # main.py
-# Import ứng dụng 'app' và 'socketio' từ file app.py
-from app import app, socketio
 
 import eventlet
 eventlet.monkey_patch()
+# Import ứng dụng 'app' và 'socketio' từ file app.py
+from app import app, socketio
 
 from flask import Flask
 
