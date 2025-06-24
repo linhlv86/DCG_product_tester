@@ -5,6 +5,8 @@ from app import app, socketio
 import eventlet
 eventlet.monkey_patch()
 
+from flask import Flask
+
 # Đoạn mã này chỉ chạy khi bạn thực thi file main.py trực tiếp
 if __name__ == '__main__':
     print("Starting Flask-SocketIO server...")
