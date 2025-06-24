@@ -1,0 +1,115 @@
+{% extends "base.html" %} {# Kế thừa từ base.html #}
+
+{% block title %}Task: {{ task.name }}{% endblock %} {# Tiêu đề trang #}
+
+{% block content %}
+<div class="task-card" id="task-card-{{ task.name|replace(' ', '_') }}">
+    <h2>{{ task.name }}</h2>
+    <button id="run-task-button">Run Test</button>
+    <p>{{ task.description }}</p>
+    <p>Status: <span id="current-status" class="status-{{ result.status }}">{{ result.status }}</span></p>
+    <p>Last Message: <span id="last-message">{{ result.message }}</span></p>
+    <h3>Chi tiết từng hạng mục kiểm tra</h3>
+    <table id="task-items-table" border="1" style="width:100%; margin-bottom: 20px;"></table>
+</div>
+{% endblock %}
+
+{% block scripts_extra %} {# JavaScript riêng cho trang chi tiết task #}
+<script>
+    $(document).ready(function() {
+        var socket = io();
+        var taskName = "{{ task.name }}"; // Lấy tên task từ Jinja2
+        
+        // Lắng nghe sự kiện 'task_status_update'
+        socket.on('task_status_update', function(data) {
+            console.log('Received task_status_update:', data);
+            if (data[taskName]) {
+                var taskResult = data[taskName];
+                $('#current-status').attr('class', 'status-' + taskResult.status).text(taskResult.status);
+                $('#last-message').text(taskResult.message);
+
+                // Hiển thị từng item nhỏ
+                var items = taskResult.items || [];
+                var tbody = $('#task-items-table tbody');
+                tbody.empty();
+                items.forEach(function(item) {
+                    var row = `<tr>
+                        <td>${item.name}</td>
+                        <td style="color:${item.pass ? 'green' : 'red'}">${item.pass ? 'PASS' : 'FAIL'}</td>
+                        <td>${item.message || ''}</td>
+                    </tr>`;
+                    tbody.append(row);
+                });
+
+                // Kích hoạt lại nút Run Test nếu task hoàn thành
+                if (taskResult.status === 'Passed' || taskResult.status === 'Failed' || taskResult.status === 'Pending') {
+                    $('#run-task-button').prop('disabled', false).text('Run Test');
+                } else if (taskResult.status === 'Running') {
+                     $('#run-task-button').prop('disabled', true).text('Running...');
+                }
+            }
+        });
+
+        // Lắng nghe sự kiện 'console_log_update' (thêm dòng log mới)
+        socket.on('console_log_update', function(data) {
+            var logDiv = $('#console-log-task');
+            // Lọc log: chỉ hiển thị dòng nào có chứa tên task hoặc là log tổng quan của Auto Test
+            if (data.log.includes('Task: ' + taskName) || 
+                data.log.includes('Starting task: ' + taskName) ||
+                data.log.includes('--- Auto Test Started ---') ||
+                data.log.includes('--- Auto Test Finished ---')) {
+                
+                var isScrolledToBottom = logDiv[0].scrollHeight - logDiv[0].clientHeight <= logDiv[0].scrollTop + 1;
+                logDiv.append(data.log + '\n');
+                if (isScrolledToBottom) {
+                    logDiv[0].scrollTop = logDiv[0].scrollHeight;
+                }
+            }
+        });
+
+        // Lắng nghe sự kiện 'initial_log' (khi client kết nối)
+        socket.on('initial_log', function(data) {
+            var logDiv = $('#console-log-task');
+            // Lọc log lịch sử để chỉ hiển thị của task này
+            var filteredLogs = data.log.split('\n').filter(log => 
+                log.includes('Task: ' + taskName) || 
+                log.includes('Starting task: ' + taskName) ||
+                log.includes('--- Auto Test Started ---') ||
+                log.includes('--- Auto Test Finished ---')
+            );
+            logDiv.html(filteredLogs.join('\n'));
+            logDiv[0].scrollTop = logDiv[0].scrollHeight;
+        });
+
+        // Xử lý nút Run Test
+        $('#run-task-button').on('click', function() {
+            var button = $(this);
+            button.prop('disabled', true).text('Pending...');
+
+            // Cập nhật trạng thái ngay lập tức trên UI (đến lúc SocketIO cập nhật lại)
+            $('#current-status').attr('class', 'status-Running').text('Running');
+            $('#last-message').text('Test initiated...');
+
+
+            $.post('/run_task/' + encodeURIComponent(taskName) + '?name=' + encodeURIComponent(taskName), function(response) {
+                if (!response.success) {
+                    alert(response.message);
+                    button.prop('disabled', false).text('Run Test');
+                }
+            });
+        });
+
+        // Khi trang tải, kiểm tra nếu auto test đang chạy để vô hiệu hóa nút
+        socket.on('auto_test_started', function() {
+            $('#run-task-button').prop('disabled', true);
+        });
+        socket.on('auto_test_finished', function() {
+            // Kích hoạt lại nút nếu task không phải đang Running/Pending
+            var currentStatus = $('#current-status').text();
+            if (currentStatus !== 'Running' && currentStatus !== 'Pending') {
+                $('#run-task-button').prop('disabled', false);
+            }
+        });
+    });
+</script>
+{% endblock %}

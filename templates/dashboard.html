@@ -1,0 +1,260 @@
+{% extends "base.html" %} {# Kế thừa từ base.html #}
+
+{% block title %}Dashboard{% endblock %} {# Thiết lập tiêu đề trang #}
+
+{% block content %} {# Nội dung chính của trang Dashboard #}
+<div style="display: flex; gap: 20px;">
+    <!-- Cột trái: Task cards -->
+    <div id="tasks-container" style="flex: 0 0 65%; max-width: 65%;">
+        {% for task in tasks %}
+        <div class="task-card">
+            <div class="task-card-header status-{{ task_results[task.name].status|lower }}">
+                <h2 id="task-title-{{ task.name|replace(' ', '_') }}">TASK: {{ task.name }}</h2> {# Bỏ trạng thái khỏi H2 #}
+                <!-- <button class="run-single-test-button" data-task-name="{{ task.name }}">
+                    {{ task_results[task.name].status }} {# Hiển thị trạng thái ban đầu của task trong nút #}
+                </button> -->
+                <span class="task-status-label status-{{ task_results[task.name].status|lower }}">
+                    {{ task_results[task.name].status }}
+                </span>
+            </div>
+            <div class="task-card-body">
+                
+                <table id="task-items-table" style="width:100%; table-layout:fixed;">
+                    <colgroup>
+                        <col style="width:30%">
+                        <col style="width:20%">
+                        <col>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Result</th>
+                            <th>Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-items-{{ task.name|replace(' ', '_') }}">
+                        {# Vòng lặp mới để hiển thị các chi tiết của task #}
+                        {% for detail in task_results[task.name].details %}
+                        <tr class="status-row-{{ detail.result|lower }}"> {# Sử dụng detail.result để tạo class #}
+                            <td>{{ detail.item }}</td>
+                            <td class="status-cell-{{ detail.result|lower }}">{{ detail.result }}</td>
+                            <td>{{ detail.detail }}</td>
+                        </tr>
+                        {% else %} {# Nếu không có chi tiết nào, hiển thị hàng Overall Test #}
+                        <tr id="task-overall-row-{{ task.name|replace(' ', '_') }}" class="status-row-{{ task_results[task.name].status|lower }}">
+                            <td>Overall Test</td>
+                            <td class="status-cell-{{ task_results[task.name].status|lower }}">{{ task_results[task.name].status }}</td>
+                            <td>{{ task_results[task.name].message }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    
+    </div>
+    <!-- Cột phải: Console log -->
+    <div style="flex: 0 0 35%; max-width: 35%; display: flex; flex-direction: column;">
+        <b style="padding: 10px">Console Log</b>
+        <pre id="console-log" style="flex: 1; background: #111; color: #0f0; padding: 10px; overflow-y: auto; min-height: 300px;"></pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %} {# JavaScript riêng cho trang Dashboard #}
+<script>
+
+    $(document).ready(function() {
+        var socket = io(); // Khởi tạo kết nối Socket.IO tới server
+
+        // Hàm cập nhật một hàng trong bảng task (hàng "Overall Test")
+        function updateTaskOverallRow(taskName, result) {
+            var safeTaskName = taskName.replace(/ /g, '_'); // Tạo tên an toàn cho ID HTML
+            var rowId = '#task-overall-row-' + safeTaskName;
+            var titleId = '#task-title-' + safeTaskName;
+            var buttonSelector = '.run-single-test-button[data-task-name="' + taskName + '"]';
+
+            // Cập nhật tiêu đề card
+            $(titleId).text('TASK: ' + taskName + ' (' + result.status + ')');
+            
+            // Cập nhật lớp CSS và nội dung của hàng kết quả
+            $(rowId).attr('class', 'status-row-' + result.status);
+            $(rowId).find('td:nth-child(2)').attr('class', 'status-cell-' + result.status).text(result.status);
+            $(rowId).find('td:nth-child(3)').text(result.message);
+
+            // Kích hoạt lại nút "Run Test" riêng lẻ nếu task đã hoàn thành (Passed/Failed)
+            // Hoặc vô hiệu hóa nếu đang chạy
+            if (result.status === 'Passed' || result.status === 'Failed' || result.status === 'Pending') {
+                $(buttonSelector).prop('disabled', false).text(result.status === 'Passed' ? 'Run Test' : 'Run Test');
+            } else{
+                $(buttonSelector).prop('disabled', true).text('xxxxx');
+            }
+        }
+
+        function updateTaskDetailsTable(taskName, details) {
+            var safeTaskName = taskName.replace(/ /g, '_');
+            var tbodyId = '#task-items-' + safeTaskName;
+            var tbody = $(tbodyId);
+            tbody.empty(); // Xóa tất cả các hàng hiện có
+
+            if (details && details.length > 0) {
+                $.each(details, function(index, detail) {
+                    var statusClass = detail.result.toLowerCase(); // Chuyển "OK", "Fail", "Pending" thành "ok", "fail", "pending"
+                    var row = '<tr class="status-row-' + statusClass + '">' +
+                                '<td>' + detail.item + '</td>' +
+                                '<td class="status-cell-' + statusClass + '">' + detail.result + '</td>' +
+                                '<td>' + detail.detail + '</td>' +
+                            '</tr>';
+                    tbody.append(row);
+                });
+            } else {
+                // Nếu không có chi tiết, hiển thị hàng "Overall Test"
+                // Lấy trạng thái tổng thể từ task_results (cần dữ liệu task_results đầy đủ)
+                // Đây là nơi bạn sẽ cần điều chỉnh thêm nếu bạn chỉ cập nhật từng phần
+                // Tạm thời, chúng ta sẽ giả định `task_results` trong frontend có sẵn (được Jinja truyền xuống ban đầu)
+                // Hoặc bạn cần đảm bảo `data` từ socket.on('task_status_update') chứa đủ `status` và `message` tổng thể.
+                var taskOverallStatus = task_results_initial[taskName] ? task_results_initial[taskName].status : 'Pending'; // Sử dụng biến giữ trạng thái ban đầu hoặc từ socket update
+                var taskOverallMessage = task_results_initial[taskName] ? task_results_initial[taskName].message : 'No details available.';
+                var overallRow = '<tr id="task-overall-row-' + safeTaskName + '" class="status-row-' + taskOverallStatus.toLowerCase() + '">' +
+                                    '<td>Overall Test</td>' +
+                                    '<td class="status-cell-' + taskOverallStatus.toLowerCase() + '">' + taskOverallStatus + '</td>' +
+                                    '<td>' + taskOverallMessage + '</td>' +
+                                '</tr>';
+                tbody.append(overallRow);
+            }
+        }
+
+
+        // Lắng nghe sự kiện 'task_status_update' từ server
+        // Được gửi khi một task đơn lẻ kết thúc hoặc thay đổi trạng thái
+        socket.on('task_status_update', function(data) {
+            console.log('Received task_status_update:', data); // In ra dữ liệu nhận được để kiểm tra
+            $.each(data, function(taskName, result) {
+                // Cập nhật tiêu đề và nút
+                var safeTaskName = taskName.replace(/ /g, '_');
+                var titleId = '#task-title-' + safeTaskName;
+                var buttonSelector = '.run-single-test-button[data-task-name="' + taskName + '"]';
+
+                $(titleId).text('TASK: ' + taskName + ' (' + result.status + ')');
+                if (result.status === 'Passed' || result.status === 'Failed' || result.status === 'Pending') {
+                    $(buttonSelector).prop('disabled', false).text('Run Test');
+                } else if (result.status === 'Running') {
+                    $(buttonSelector).prop('disabled', true).text('Running...');
+                }
+
+                // Cập nhật bảng chi tiết
+                updateTaskDetailsTable(taskName, result.details); // Truyền mảng details vào đây
+            });
+        });
+
+
+        // Lắng nghe sự kiện 'full_task_status_update' (khi client kết nối hoặc auto test bắt đầu reset)
+        // Cập nhật hàm xử lý Socket.IO 'full_task_status_update'
+        socket.on('full_task_status_update', function(data) {
+            // Lưu lại trạng thái ban đầu để sử dụng nếu details rỗng
+            window.task_results_initial = data; 
+            $.each(data, function(taskName, result) {
+                // Cập nhật tiêu đề và nút
+                var safeTaskName = taskName.replace(/ /g, '_');
+                var titleId = '#task-title-' + safeTaskName;
+                var buttonSelector = '.run-single-test-button[data-task-name="' + taskName + '"]';
+
+                $(titleId).text('TASK: ' + taskName + ' (' + result.status + ')');
+                if (result.status === 'Passed' || result.status === 'Failed' || result.status === 'Pending') {
+                    $(buttonSelector).prop('disabled', false).text('Run Test');
+                } else if (result.status === 'Running') {
+                    $(buttonSelector).prop('disabled', true).text('Running...');
+                }
+                
+                // Cập nhật bảng chi tiết
+                updateTaskDetailsTable(taskName, result.details); // Truyền mảng details vào đây
+            });
+        });
+
+        // Lắng nghe sự kiện 'console_log_update' (thêm từng dòng log mới vào console)
+        socket.on('console_log_update', function(data) {
+            var logDiv = $('#console-log');
+            // Kiểm tra xem người dùng có đang cuộn lên trên không (để không tự động cuộn xuống)
+            var isScrolledToBottom = logDiv[0].scrollHeight - logDiv[0].clientHeight <= logDiv[0].scrollTop + 1;
+
+            logDiv.append(data.log + '\n'); // Thêm dòng log mới vào cuối
+
+            if (isScrolledToBottom) { // Nếu đang ở cuối, tự động cuộn xuống theo log mới
+                logDiv[0].scrollTop = logDiv[0].scrollHeight;
+            }
+        });
+
+        // Lắng nghe sự kiện 'initial_log' (gửi toàn bộ log hiện có khi client kết nối lần đầu)
+        socket.on('initial_log', function(data) {
+            var logDiv = $('#console-log');
+            logDiv.html(data.log); // Đặt toàn bộ nội dung log
+            logDiv[0].scrollTop = logDiv[0].scrollHeight; // Cuộn xuống cuối
+        });
+
+        // Lắng nghe sự kiện khi auto test bắt đầu từ backend
+        socket.on('auto_test_started', function() {
+            // Vô hiệu hóa nút Auto Test
+            $('#auto-test-button').prop('disabled', true).text('Running Auto Test...');
+            // Vô hiệu hóa tất cả các nút "Run Test" riêng lẻ trên các card
+            $('.run-single-test-button').prop('disabled', true);
+        });
+
+        // Lắng nghe sự kiện khi auto test kết thúc từ backend
+        socket.on('auto_test_finished', function() {
+            // Kích hoạt lại nút Auto Test
+            $('#auto-test-button').prop('disabled', false).text('Auto Test');
+            // Kích hoạt lại tất cả các nút "Run Test" riêng lẻ (sau khi task_status_update đã cập nhật xong trạng thái)
+            // (Không cần gọi .prop('disabled', false) cho từng nút ở đây vì updateTaskOverallRow đã làm rồi)
+        });
+
+        // Xử lý sự kiện click cho nút "Auto Test" trong header
+        $('#auto-test-button').on('click', function() {
+            // Gửi yêu cầu POST tới backend để bắt đầu auto test
+            $.post('/run_all_tasks', function(response) {
+                if (!response.success) {
+                    alert(response.message);
+                    // Nếu có lỗi khi bắt đầu (ví dụ: đã chạy rồi), kích hoạt lại nút
+                    $('#auto-test-button').prop('disabled', false).text('Auto Test');
+                    $('.run-single-test-button').prop('disabled', false); // Re-enable single buttons as well
+                }
+                // Trạng thái nút sẽ được SocketIO cập nhật sau khi nhận sự kiện 'auto_test_started'
+            });
+        });
+
+        // Xử lý sự kiện click cho các nút "Run Test" trên từng card
+        // Sử dụng event delegation vì các nút này có thể được thêm/xóa động hoặc có nhiều nút
+        $(document).on('click', '.run-single-test-button', function() {
+            var button = $(this);
+            var taskName = button.data('task-name'); // Lấy tên task từ thuộc tính data-task-name
+            
+            // Vô hiệu hóa nút đang click và hiển thị trạng thái "Running..."
+            button.prop('disabled', true).text('Running...');
+
+            // Cập nhật trạng thái ngay lập tức trên UI (đến lúc SocketIO cập nhật lại)
+            var safeTaskName = taskName.replace(/ /g, '_');
+            var overallRow = $('#task-overall-row-' + safeTaskName);
+            overallRow.attr('class', 'status-row-Running');
+            overallRow.find('td:nth-child(2)').attr('class', 'status-cell-Running').text('Running');
+            overallRow.find('td:nth-child(3)').text('Test initiated...');
+            $('#task-title-' + safeTaskName).text('TASK: ' + taskName + ' (Running)');
+
+
+            // Gửi yêu cầu POST tới backend để chạy task này
+            $.post('/run_task/' + encodeURIComponent(taskName) + '?name=' + encodeURIComponent(taskName), function(response) {
+                if (!response.success) {
+                    alert(response.message);
+                    button.prop('disabled', false).text('Run Test'); // Re-enable nếu có lỗi khởi động
+                }
+                // Trạng thái task cuối cùng sẽ được cập nhật bởi SocketIO
+            });
+        });
+
+        function updateTaskHeaderStatus(status) {
+            var header = $('.task-card-header');
+            header.removeClass('status-passed status-failed status-running status-inactive');
+            header.addClass('status-' + status.toLowerCase());
+        }
+    });
+</script>
+{% endblock %}

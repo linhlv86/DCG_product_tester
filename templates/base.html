@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Orange Pi CM4 Tester{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    {% block head_extra %}{% endblock %} {# Placeholder cho CSS/JS bổ sung của từng trang #}
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Dashboard</a></li>
+            {# Vòng lặp này tạo các liên kết đến trang chi tiết của từng task #}
+            {% for task in g.tasks %}
+                {# urlencode được sử dụng để xử lý các ký tự đặc biệt trong tên task khi đưa vào URL #}
+                <li><a href="/task/{{ task.name|urlencode }}?name={{ task.name|urlencode }}">{{ task.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </nav>
+
+    {# Dashboard Header chỉ hiển thị trên trang Dashboard (URL '/') #}
+    {% if request.path == '/' %}
+    <div class="dashboard-header">
+        <h1>DASHBOARD</h1>
+        <div class="buttons">
+            <button id="auto-test-button">Auto Test</button>
+            <button id="save-report-button" disabled>Save Report</button> {# Chức năng Save Report chưa làm, nên disabled #}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="content">
+        {% block content %}{% endblock %} {# Đây là nơi nội dung chính của từng trang sẽ được đặt vào #}
+    </div>
+    {% block scripts_extra %}{% endblock %} {# Placeholder cho JS bổ sung của từng trang #}
+</body>
+</html>

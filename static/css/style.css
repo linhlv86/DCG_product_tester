@@ -1,0 +1,258 @@
+/* static/css/style.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Header Dashboard */
+.dashboard-header {
+    background: linear-gradient(to right, #000dff, #00acf5); /* Gradient màu xanh */
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 5px 8px rgba(0,0,0,0.2);
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.dashboard-header .buttons button {
+    background-color: #ffffff; /* Nút màu trắng */
+    color: #cecece; /* Chữ màu xanh */
+    border: 1px solid #007bff; /* Viền xanh */
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-left: 10px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dashboard-header .buttons button:hover {
+    background-color: #e2e6ea;
+    color: #0056b3;
+}
+
+.dashboard-header .buttons button:disabled {
+    background-color: #cccccc;
+    color: #666;
+    border-color: #999;
+    cursor: not-allowed;
+}
+
+/* Main Content Area */
+.content {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+/* Task Card Styling */
+.task-card {
+    background-color: rgb(255, 255, 255);
+    border-radius: 3px;
+    box-shadow: outset 0 2px 8px rgb(0 0 0 / 50%);
+    margin-bottom: 5px;
+    padding: 5px;
+}
+
+.task-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.task-card-header h2 {
+    margin: 0;
+    font-size: 1em;
+    color: #333;
+}
+
+/* Styling cho nút "Run Test" khi nó đóng vai trò là label trạng thái */
+.run-single-test-button {
+    /* Đảm bảo nút đủ dài */
+    width: 150px; /* Điều chỉnh độ rộng tùy theo ý muốn */
+    padding: 8px 15px; /* Tăng padding để nút lớn hơn */
+    font-size: 1em; /* Cỡ chữ */
+    text-align: center;
+    cursor: default; /* Thay đổi con trỏ chuột để không giống nút bấm */
+    pointer-events: none; /* Ngăn chặn tất cả các sự kiện chuột */
+    border-radius: 5px;
+    border: 1px solid #ccc; /* Border mặc định */
+    transition: background-color 0.3s, color 0.3s; /* Thêm transition cho mượt mà */
+    
+    /* Vô hiệu hóa các hiệu ứng hover/active mặc định của nút */
+    background-color: #f0f0f0; /* Màu nền mặc định */
+    color: #333; /* Màu chữ mặc định */
+}
+
+/* Các lớp trạng thái để thay đổi màu sắc cho nút */
+.run-single-test-button.status-pending {
+    background-color: #e2e3e5; /* Xám nhạt */
+    color: #495057; /* Chữ xám */
+    border-color: #d6d8db;
+}
+
+.run-single-test-button.status-running {
+    background-color: #cfe2ff; /* Xanh dương nhạt */
+    color: #073872; /* Chữ xanh dương đậm */
+    border-color: #b8daff;
+}
+
+.run-single-test-button.status-passed {
+    background-color: #d4edda; /* Xanh lá nhạt */
+    color: #155724; /* Chữ xanh đậm */
+    border-color: #c3e6cb;
+}
+
+.run-single-test-button.status-failed {
+    background-color: #f8d7da; /* Đỏ nhạt */
+    color: #721c24; /* Chữ đỏ đậm */
+    border-color: #f5c6cb;
+}
+
+.task-card-header .run-single-test-button:hover {
+    background-color: #218838;
+}
+
+.task-card-header {
+    padding: 6px;
+    color: #fff;
+    border-radius: 6px 6px 0 0;
+}
+.status-passed   { background: #28a745; color: #fff; }
+.status-failed   { background: #dc3545; color: #fff; }
+.status-running  { background: #ffc107; color: #333; }
+.status-inactive { background: #6c757d; color: #fff; }
+
+
+/* Table Styling within cards */
+.task-card table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.task-card th, .task-card td {
+    border: 1px solid #ffffff;
+    padding: 3px;
+    text-align: left;
+    font-size: 0.8em;
+}
+
+.task-card th {
+    background-color: #797b7d; /* Header màu xanh */
+    color: white;
+}
+
+/* Status colors for table rows/cells */
+.status-row-Passed {
+    background-color: #e6ffe6; /* Light green for passed row */
+}
+.status-cell-Passed {
+    color: green;
+    font-weight: bold;
+}
+
+.status-row-Failed {
+    background-color: #ffe6e6; /* Light red for failed row */
+}
+.status-cell-Failed {
+    color: red;
+    font-weight: bold;
+}
+
+.status-row-Running, .status-row-Pending {
+    background-color: #f8f8f8; /* Light gray for running/pending row */
+}
+.status-cell-Running {
+    color: orange;
+    font-weight: bold;
+}
+.status-cell-Pending {
+    color: gray;
+    font-weight: bold;
+}
+
+/* Console Log Styling */
+#console-log {
+    background-color: #333333;
+    color: limegreen;
+    padding: 15px;
+    height: 250px;
+    overflow-y: auto; /* Sử dụng auto để thanh cuộn chỉ xuất hiện khi cần */
+    white-space: pre-wrap; /* Giữ định dạng khoảng trắng và xuống dòng */
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+/* Basic Nav */
+nav {
+    background-color: #444; /* Darker nav for contrast */
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+nav ul li a:hover {
+    background-color: #666;
+}
+
+/* Màu sắc cho các hàng trạng thái */
+.status-row-ok { background-color: #d4edda; } /* Xanh lá nhạt */
+.status-cell-ok { color: #155724; font-weight: bold; } /* Chữ xanh đậm */
+
+.status-row-fail { background-color: #f8d7da; } /* Đỏ nhạt */
+.status-cell-fail { color: #721c24; font-weight: bold; } /* Chữ đỏ đậm */
+
+.status-row-pending { background-color: #e2e3e5; } /* Xám nhạt */
+.status-cell-pending { color: #495057; font-style: italic; } /* Chữ xám */
+
+.status-row-running { background-color: #cfe2ff; } /* Xanh dương nhạt */
+.status-cell-running { color: #073872; font-weight: bold; } /* Chữ xanh dương đậm */
+
+/* Thêm các lớp này cho tổng thể task card cũng được */
+.task-card.status-pending { border: 1px solid #e2e3e5; }
+.task-card.status-running { border: 1px solid #cfe2ff; }
+.task-card.status-passed { border: 1px solid #d4edda; }
+.task-card.status-failed { border: 1px solid #f8d7da; }
+
+.task-status-label {
+    display: inline-block;
+    /* padding: 4px 12px; */
+    /* border-radius: 12px; */
+    font-weight: bold;
+    /* margin-bottom: 10px; */
+}
