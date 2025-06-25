@@ -6,6 +6,27 @@ eventlet.monkey_patch()
 from app import app, socketio
 
 from flask import Flask
+import socket
+import threading
+import time
+
+def send_udp_broadcast(port=5005, interval=1):
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    udp_socket.settimeout(0.2)
+
+    # Lấy IP của máy
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
+    message = f"IP:{local_ip}".encode()
+
+    while True:
+        udp_socket.sendto(message, ('<broadcast>', port))
+        time.sleep(interval)
+
+# Chạy ở chế độ nền khi app khởi động
+threading.Thread(target=send_udp_broadcast, daemon=True).start()
 
 # Đoạn mã này chỉ chạy khi bạn thực thi file main.py trực tiếp
 if __name__ == '__main__':

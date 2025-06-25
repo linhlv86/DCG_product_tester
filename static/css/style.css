@@ -14,6 +14,7 @@ body {
     padding: 10px;
     display: flex;
     justify-content: space-between;
+    flex-direction: row-reverse;
     align-items: center;
     box-shadow: 0 5px 8px rgba(0,0,0,0.2);
 }
@@ -24,8 +25,8 @@ body {
 }
 
 .dashboard-header .buttons button {
-    background-color: #ffffff; /* Nút màu trắng */
-    color: #cecece; /* Chữ màu xanh */
+    background-color: lch(46.04% 70.54 135.07); /* Nút màu trắng */
+    color: #000000; /* Chữ màu xanh */
     border: 1px solid #007bff; /* Viền xanh */
     padding: 8px 15px;
     border-radius: 5px;
@@ -33,6 +34,7 @@ body {
     font-size: 1em;
     margin-left: 10px;
     transition: background-color 0.3s, color 0.3s;
+    box-shadow: outset 0 2px 8px rgb(0 0 0 / 50%);
 }
 
 .dashboard-header .buttons button:hover {
@@ -58,7 +60,7 @@ body {
 .task-card {
     background-color: rgb(255, 255, 255);
     border-radius: 3px;
-    box-shadow: outset 0 2px 8px rgb(0 0 0 / 50%);
+    box-shadow: outset 0 2px 8px rgb(0 0 0 / 80%);
     margin-bottom: 5px;
     padding: 5px;
 }
@@ -140,11 +142,11 @@ body {
 .task-card table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
+    margin-top: 0px;
 }
 
 .task-card th, .task-card td {
-    border: 1px solid #ffffff;
+    border: 1px dashed #c3c3c3;
     padding: 3px;
     text-align: left;
     font-size: 0.8em;
@@ -187,15 +189,15 @@ body {
 /* Console Log Styling */
 #console-log {
     background-color: #333333;
-    color: limegreen;
+    color: rgb(0, 120 , 0);
     padding: 15px;
-    height: 250px;
-    overflow-y: auto; /* Sử dụng auto để thanh cuộn chỉ xuất hiện khi cần */
+    height: 500px;
+    overflow-y: scroll; /* Sử dụng auto để thanh cuộn chỉ xuất hiện khi cần */
     white-space: pre-wrap; /* Giữ định dạng khoảng trắng và xuống dòng */
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 0.9em;
-    border-radius: 10px;
-    margin-top: 20px;
+    border-radius: 5px;
+    margin-top: 0px;
 }
 
 /* Basic Nav */
