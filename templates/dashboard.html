@@ -8,7 +8,7 @@
         {% for task in tasks %}
         <div class="task-card">
             <div class="task-card-header status-{{ task_results[task.name].status|lower }}" id="task-header-{{ task.name|replace(' ', '_') }}">
-                <h2 id="task-title-{{ task.name|replace(' ', '_') }}">TASK: {{ task.name }}</h2> {# Removes status from H2 #}
+                <h2 id="task-title-{{ task.name|replace(' ', '_') }}">{{ task.name }}</h2> {# Removes status from H2 #}
                 <span class="task-status-label status-{{ task_results[task.name].status|lower }}" id="task-status-label-{{ task.name|replace(' ', '_') }}">
                     {{ task_results[task.name].status }}
                 </span>
@@ -79,7 +79,7 @@
             label.removeClass('status-passed status-failed status-running status-inactive status-pending').addClass('status-' + statusClass);
             
             // Update TASK title (if you want to show status in the title)
-            $('#task-title-' + safeTaskName).text('TASK: ' + taskName); 
+            $('#task-title-' + safeTaskName).text(taskName); 
         }
 
         // Function to update the entire detail table of a task

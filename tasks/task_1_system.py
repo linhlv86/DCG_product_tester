@@ -11,7 +11,7 @@ def test_task():
 
     # 1. Kiểm tra uname -a
     try:
-        output = subprocess.check_output(['uname', '-a'], text=True).strip()
+        output = subprocess.check_output(['/usr/bin/uname', '-a'], text=True).strip()
         detail_results.append({
             "item": "uname -a",
             "result": "PASS",
@@ -28,7 +28,7 @@ def test_task():
 
     # 2. Kiểm tra số lượng phân vùng ổ đĩa
     try:
-        output = subprocess.check_output(['lsblk', '-n', '-o', 'TYPE'], text=True)
+        output = subprocess.check_output(['/usr/bin/lsblk', '-n', '-o', 'TYPE'], text=True)
         partitions = [line for line in output.splitlines() if line.strip() == 'part']
         ok = len(partitions) >= 2
         detail_results.append({
