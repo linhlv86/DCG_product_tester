@@ -32,21 +32,22 @@ def auto_git_pull(interval=10):
     project_dir = os.path.dirname(os.path.abspath(__file__))
     while True:
         try:
-            old_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=project_dir, text=True).strip()
-            subprocess.run(['git', 'fetch', 'origin'], cwd=project_dir)
-            new_commit = subprocess.check_output(['git', 'rev-parse', 'origin/main'], cwd=project_dir, text=True).strip()
+            GIT = '/usr/bin/git'
+            old_commit = subprocess.check_output([GIT, 'rev-parse', 'HEAD'], cwd=project_dir, text=True).strip()
+            subprocess.run([GIT, 'fetch', 'origin'], cwd=project_dir)
+            new_commit = subprocess.check_output([GIT, 'rev-parse', 'origin/main'], cwd=project_dir, text=True).strip()
             if old_commit != new_commit:
-                print("Có phiên bản mới, tự động pull và restart...")
-                subprocess.run(['git', 'stash'], cwd=project_dir)
-                subprocess.run(['git', 'pull', 'origin', 'main'], cwd=project_dir)
-                subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'], cwd=project_dir)
-                subprocess.run(['git', 'stash', 'pop'], cwd=project_dir)
+                print("New version detect,automatic pull và restart...")
+                subprocess.run([GIT, 'stash'], cwd=project_dir)
+                subprocess.run([GIT, 'pull', 'origin', 'main'], cwd=project_dir)
+                # subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'], cwd=project_dir)
+                subprocess.run([GIT, 'stash', 'pop'], cwd=project_dir)
                 # Restart lại process
                 os.execv(sys.executable, [sys.executable] + sys.argv)
-            else:
-                print("Không có thay đổi mới.")
+            # else:
+            #     print("Không có thay đổi mới.")
         except Exception as e:
-            print("Lỗi auto git pull:", e)
+            print("Git error:", e)
         time.sleep(interval)
 
 # Chạy ở chế độ nền khi app khởi động
