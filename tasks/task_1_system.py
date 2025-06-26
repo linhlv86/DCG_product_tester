@@ -118,6 +118,7 @@ def test_task():
                     found_p2 = True
         ok = found_p1 and found_p2
         detail = "Partitions and sizes:\n" + "\n+ ".join(partitions) if partitions else "No partitions found."
+
         detail_results.append({
             "item": "Disk partitions",
             "result": "PASS" if ok else "FAIL",
@@ -142,7 +143,7 @@ def test_task():
     num_fail = len(detail_results) - num_pass
     all_pass = all(r["passed"] for r in detail_results)
     status = "Passed" if all_pass else "Failed"
-    message = f"Sumary: {num_pass} PASS, {num_fail} FAIL."
+    message = detail + f"\nSummary: {num_pass} PASS, {num_fail} FAIL."
 
     return status, message, detail_results
 
