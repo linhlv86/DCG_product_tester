@@ -20,7 +20,12 @@ def check_lsusb():
         found_terminus = any("Terminus Technology Inc. Hub" in line for line in devices)
         found_ethernet = any("Ethernet 10/100/1000 Adapter" in line for line in devices)
         ok = found_terminus and found_ethernet
-        detail = "USB devices found:\n" + "\n -".join(devices) if devices else "No USB devices found."
+        devices.sort()  # Sắp xếp danh sách thiết bị
+        if devices:
+            detail = "USB devices found:\n" + "\n".join(f"+ {d}" for d in devices)
+        else:
+            detail = "No USB devices found."
+
         if not found_terminus:
             detail += "\nNotfound Terminus Technology Inc. Hub"
         if not found_ethernet:
@@ -68,7 +73,13 @@ def list_network_interfaces():
                 ip_str = info["ip"][0] if info["ip"] else "N/A"
                 result.append(f"{name}: {ip_str} ({info['mac']})")
 
-        detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
+        # detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
+        result.sort()  # Sắp xếp kết quả theo tên interface
+        if result:
+            detail = "Interfaces found:\n" + "\n".join(f"+ {d}" for d in result)
+        else:
+            detail = "No interfaces found."
+
         global global_message
         global_message.append(detail)
         return {
@@ -123,6 +134,7 @@ def test_task():
                 if partition_name == '/dev/mmcblk1p2':
                     found_p2 = True
         ok = found_p1 and found_p2
+        partitions.sort()  # Sắp xếp danh sách phân vùng
         if partitions:
             detail = "Partitions and sizes:\n" + "\n".join(f"+ {p}" for p in partitions)
         else:
