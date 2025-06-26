@@ -18,7 +18,7 @@ def check_lsusb():
         found_terminus = any("Terminus Technology Inc. Hub" in line for line in devices)
         found_ethernet = any("Ethernet 10/100/1000 Adapter" in line for line in devices)
         ok = found_terminus and found_ethernet
-        detail = "USB devices found:\n" + "\n".join(devices) if devices else "No USB devices found."
+        detail = "USB devices found:\n" + "\n -".join(devices) if devices else "No USB devices found."
         if not found_terminus:
             detail += "\nNotfound Terminus Technology Inc. Hub"
         if not found_ethernet:
@@ -64,7 +64,7 @@ def list_network_interfaces():
                 ip_str = info["ip"][0] if info["ip"] else "N/A"
                 result.append(f"{name}: {ip_str} ({info['mac']})")
 
-        detail = "Interfaces:\n" + "\n".join(result) if result else "No network interfaces found."
+        detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
         return {
             "item": "Network interfaces",
             "result": "PASS" if result else "FAIL",
