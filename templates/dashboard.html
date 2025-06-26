@@ -17,7 +17,7 @@
                 <table id="task-items-table" style="width:100%; table-layout:fixed;">
                     <colgroup>
                         <col style="width:100px">
-                        <col style="width:30px">
+                        <col style="width:50px">
                         <col>
                     </colgroup>
                     <thead>
@@ -190,7 +190,6 @@
                     // If there's an error starting (e.g., already running), re-enable button
                     $('#auto-test-button').prop('disabled', false).text('Auto Test');
                 }
-                 $('#console-log').html(''); // Clear log area when starting auto test
                 // Button status will be updated by SocketIO after receiving 'auto_test_started' event
             });
         });
