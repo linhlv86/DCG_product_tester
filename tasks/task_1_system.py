@@ -9,24 +9,28 @@ DESCRIPTION = "System information"
 def check_lsusb():
     try:
         output = subprocess.check_output(['/usr/bin/lsusb'], text=True)
-        devices = [line for line in output.strip().split('\n') if line.strip()]
+        # Lọc các dòng thực sự là thiết bị và không chứa "Linux Foundation"
+        devices = [
+            line for line in output.strip().split('\n')
+            if line.strip() and "Linux Foundation" not in line
+        ]
         found_terminus = any("Terminus Technology Inc. Hub" in line for line in devices)
         found_ethernet = any("Ethernet 10/100/1000 Adapter" in line for line in devices)
         ok = found_terminus and found_ethernet
         detail = "USB devices found:\n" + "\n".join(devices) if devices else "No USB devices found."
         if not found_terminus:
-            detail += "\nKhông tìm thấy Terminus Technology Inc. Hub"
+            detail += "\nNotfound Terminus Technology Inc. Hub"
         if not found_ethernet:
-            detail += "\nKhông tìm thấy Ethernet 10/100/1000 Adapter"
+            detail += "\nNot found Ethernet 10/100/1000 Adapter"
         return {
-            "item": "lsusb",
+            "item": "USB devices",
             "result": "PASS" if ok else "FAIL",
             "detail": detail,
             "passed": ok
         }
     except Exception as e:
         return {
-            "item": "lsusb",
+            "item": "USB devices",
             "result": "FAIL",
             "detail": str(e),
             "passed": False
