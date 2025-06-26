@@ -33,7 +33,7 @@
                         <tr class="status-row-{{ detail.result|lower }}"> {# Uses detail.result to create class #}
                             <td>{{ detail.item }}</td>
                             <td class="status-cell-{{ detail.result|lower }}">{{ detail.result }}</td>
-                            <td><pre style="margin:0">{{ detail.detail }}</pre></td>
+                            <td>{{ detail.detail | replace('\n', '<br>') | safe }}</td>
                         </tr>
                         {% else %} {# If no details, display Overall Test row #}
                         <tr id="task-overall-row-{{ task.name|replace(' ', '_') }}" class="status-row-{{ task_results[task.name].status|lower }}">
@@ -91,11 +91,14 @@
 
             if (details && details.length > 0) {
                 $.each(details, function(index, detail) {
-                    var statusClass = detail.result.toLowerCase(); // Converts "OK", "Fail", "Pending" to "ok", "fail", "pending"
+                    var statusClass = detail.result.toLowerCase();
+                    // Thay \n bằng <br> trong JS
+                    var detailHtml = detail.detail.replace(/\n/g, '<br>');
                     var row = '<tr class="status-row-' + statusClass + '">' +
                         '<td>' + detail.item + '</td>' +
                         '<td class="status-cell-' + statusClass + '">' + detail.result + '</td>' +
-                        '<td> <pre style="margin:0">' +  detail.detail + '</pre> + </td> </tr>';
+                        '<td>' + detailHtml + '</td>' +
+                        '</tr>';
                     tbody.append(row);
                 });
             } else {

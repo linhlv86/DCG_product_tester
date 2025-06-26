@@ -33,7 +33,7 @@ def test_task():
         partitions = []
         for line in lines[1:]:  # Bỏ dòng tiêu đề
             parts = line.split()
-            if len(parts) >= 2:
+            if len(parts) >= 2 and parts[0].startswith('/dev/'):
                 partition_name = parts[0]
                 size = parts[1]
                 partitions.append(f"{partition_name}: {size}")
