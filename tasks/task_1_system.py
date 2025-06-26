@@ -25,7 +25,7 @@ def check_lsusb():
             detail += "\nNotfound Terminus Technology Inc. Hub"
         if not found_ethernet:
             detail += "\nNot found Ethernet 10/100/1000 Adapter"
-        
+        global global_message
         global_message += "\n" + detail
         return {
             "item": "USB devices",
@@ -69,7 +69,7 @@ def list_network_interfaces():
                 result.append(f"{name}: {ip_str} ({info['mac']})")
 
         detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
-        
+        global global_message
         global_message += "\n" + detail
         return {
             "item": "Network interfaces",
@@ -152,7 +152,7 @@ def test_task():
     num_fail = len(detail_results) - num_pass
     all_pass = all(r["passed"] for r in detail_results)
     status = "Passed" if all_pass else "Failed"
-    message = detail + f"\nSummary: {num_pass} PASS, {num_fail} FAIL."
+    message = global_message + "\n______________\n"+ f"Summary: {num_pass} PASS, {num_fail} FAIL."
 
     return status, message, detail_results
 
