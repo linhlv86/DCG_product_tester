@@ -190,7 +190,7 @@
                     // If there's an error starting (e.g., already running), re-enable button
                     $('#auto-test-button').prop('disabled', false).text('Auto Test');
                 }
-                 $('#log-area').html(''); // Clear log area when starting auto test
+                 $('#console-log').html(''); // Clear log area when starting auto test
                 // Button status will be updated by SocketIO after receiving 'auto_test_started' event
             });
         });
