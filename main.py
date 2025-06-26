@@ -43,7 +43,7 @@ def auto_git_pull(interval=10):
                 # subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'], cwd=project_dir)
                 subprocess.run([GIT, 'stash', 'pop'], cwd=project_dir)
                 # Restart lại process
-                os.execv(sys.executable, [sys.executable] + sys.argv)
+                # os.execv(sys.executable, [sys.executable] + sys.argv)
             # else:
             #     print("Không có thay đổi mới.")
         except Exception as e:
