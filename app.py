@@ -157,7 +157,7 @@ def load_global_tasks():
     """
     # Chỉ load tasks một lần khi app mới khởi động
     if 'LOADED_TASKS' not in app.config:
-        print("[DEBUG] Chưa có LOADED_TASKS, tiến hành load.")
+        print("[DEBUG] load tasks")
         app.config['LOADED_TASKS'] = load_tasks()
         print(f"[DEBUG] Đã load {len(app.config['LOADED_TASKS'])} tasks.")
 
@@ -166,7 +166,7 @@ def load_global_tasks():
             task_results[task['name']] = {'status': 'Pending', 'message': ''}
     
     g.tasks = app.config['LOADED_TASKS'] # Lưu vào g để truy cập trong templates
-    print(f"[DEBUG] Đã gán g.tasks với {len(g.tasks)} task.")
+    print(f"[DEBUG]  {len(g.tasks)} task.")
 
 
 @app.route('/')
@@ -186,10 +186,10 @@ def show_task(task_name_encoded):
     # Tìm thông tin task trong danh sách các task đã tải
     task_info = next((task for task in g.tasks if task['name'] == task_name), None)
     if task_info:
-        print(f"[DEBUG] Đã tìm thấy thông tin task: {task_info['name']}")
+        print(f"[DEBUG] found: {task_info['name']}")
         # Render template task.html và truyền thông tin task và kết quả hiện tại của nó
         return render_template('task.html', task=task_info, result=task_results.get(task_name, {'status': 'Pending', 'message': ''}))
-    print(f"[WARNING] Không tìm thấy task: {task_name}")
+    print(f"[WARNING]{task_name} not found in loaded tasks.")
     return "Task not found", 404 # Trả về lỗi 404 nếu không tìm thấy task
 
 @app.route('/run_task/<task_name_encoded>', methods=['POST'])
@@ -199,7 +199,7 @@ def run_task_route(task_name_encoded):
     task_name = request.args.get('name', task_name_encoded.replace('%20', ' '))
     task_to_run = next((task for task in g.tasks if task['name'] == task_name), None)
     if task_to_run:
-        print(f"[DEBUG] Starting run: {task_name}")
+        print(f"[DEBUG] Starting run:[{task_name}]")
         # Chạy task trong một luồng riêng biệt để không làm block ứng dụng chính
         thread = threading.Thread(target=execute_single_task, args=(task_to_run,))
         thread.daemon = True # Đặt luồng là daemon để nó tự kết thúc khi ứng dụng chính tắt
