@@ -53,14 +53,16 @@ def list_network_interfaces():
             parts = line.split()
             if len(parts) >= 4:
                 name = parts[1]
-                ip = parts[3]  # Giữ nguyên cả subnet mask
+                ip = parts[3]  # giữ nguyên cả subnet mask
                 if name in interfaces:
                     interfaces[name]["ip"].append(ip)
 
+        # Hiển thị tất cả interface, kể cả không có IP
         result = []
         for name, info in interfaces.items():
-            if info["ip"] and not name.startswith(('lo', 'docker', 'veth')):
-                result.append(f"{name}: {info['ip'][0]} ({info['mac']})")
+            if not name.startswith(('lo', 'docker', 'veth')):
+                ip_str = info["ip"][0] if info["ip"] else "N/A"
+                result.append(f"{name}: {ip_str} ({info['mac']})")
 
         detail = "Interfaces:\n" + "\n".join(result) if result else "No network interfaces found."
         return {
