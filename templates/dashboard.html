@@ -93,10 +93,9 @@
                 $.each(details, function(index, detail) {
                     var statusClass = detail.result.toLowerCase(); // Converts "OK", "Fail", "Pending" to "ok", "fail", "pending"
                     var row = '<tr class="status-row-' + statusClass + '">' +
-                                '<td>' + detail.item + '</td>' +
-                                '<td class="status-cell-' + statusClass + '">' + detail.result + '</td>' +
-                                '<td>' + detail.detail + '</td>' +
-                              '</tr>';
+                        '<td>' + detail.item + '</td>' +
+                        '<td class="status-cell-' + statusClass + '">' + detail.result + '</td>' +
+                        '<td> <pre style="margin:0">' +  detail.detail + '</pre> + </td> </tr>';
                     tbody.append(row);
                 });
             } else {
