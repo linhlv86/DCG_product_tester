@@ -7,6 +7,8 @@ import re
 # Mô tả của task này, sẽ hiển thị trên giao diện người dùng
 DESCRIPTION = "System information"
 
+global_message =[]
+
 def check_lsusb():
     try:
         output = subprocess.check_output(['/usr/bin/lsusb'], text=True)
@@ -23,6 +25,8 @@ def check_lsusb():
             detail += "\nNotfound Terminus Technology Inc. Hub"
         if not found_ethernet:
             detail += "\nNot found Ethernet 10/100/1000 Adapter"
+        
+        global_message += "\n" + detail
         return {
             "item": "USB devices",
             "result": "PASS" if ok else "FAIL",
@@ -65,6 +69,8 @@ def list_network_interfaces():
                 result.append(f"{name}: {ip_str} ({info['mac']})")
 
         detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
+        
+        global_message += "\n" + detail
         return {
             "item": "Network interfaces",
             "result": "PASS" if result else "FAIL",
