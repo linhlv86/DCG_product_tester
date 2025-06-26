@@ -26,7 +26,7 @@ def check_lsusb():
         if not found_ethernet:
             detail += "\nNot found Ethernet 10/100/1000 Adapter"
         global global_message
-        global_message += "\n" + detail
+        global_message.append(detail)
         return {
             "item": "USB devices",
             "result": "PASS" if ok else "FAIL",
@@ -70,7 +70,7 @@ def list_network_interfaces():
 
         detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
         global global_message
-        global_message += "\n" + detail
+        global_message.append(detail)
         return {
             "item": "Network interfaces",
             "result": "PASS" if result else "FAIL",
@@ -152,7 +152,7 @@ def test_task():
     num_fail = len(detail_results) - num_pass
     all_pass = all(r["passed"] for r in detail_results)
     status = "Passed" if all_pass else "Failed"
-    message = "\n".join(global_message) + "\n______________\n"+ f"Summary: {num_pass} PASS, {num_fail} FAIL."
+    message = "\n".join(global_message) + f"Summary: {num_pass} PASS, {num_fail} FAIL. " + "\n\n"
 
     return status, message, detail_results
 
