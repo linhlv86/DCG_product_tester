@@ -36,4 +36,4 @@ if __name__ == '__main__':
     # - host='0.0.0.0': Cho phép truy cập từ mọi địa chỉ IP (cần thiết khi chạy trên Orange Pi và truy cập từ máy khác)
     # - port=5000: Cổng mặc định cho ứng dụng web
     # - allow_unsafe_werkzeug=True: Cần thiết khi dùng debug=True với Flask-SocketIO (cho môi trường dev)
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True, host='0.0.0.0', port=80)
