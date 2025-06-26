@@ -2,6 +2,7 @@
 import time
 import subprocess
 import json
+import re
 
 # Mô tả của task này, sẽ hiển thị trên giao diện người dùng
 DESCRIPTION = "System information"
@@ -31,6 +32,46 @@ def check_lsusb():
     except Exception as e:
         return {
             "item": "USB devices",
+            "result": "FAIL",
+            "detail": str(e),
+            "passed": False
+        }
+
+def list_network_interfaces():
+    try:
+        link_output = subprocess.check_output(['/sbin/ip', '-o', 'link'], text=True)
+        addr_output = subprocess.check_output(['/sbin/ip', '-o', '-4', 'addr'], text=True)
+
+        interfaces = {}
+        for line in link_output.strip().split('\n'):
+            match = re.match(r'\d+: (\S+):.*link/\w+ ([\da-f:]{17})', line)
+            if match:
+                name, mac = match.groups()
+                interfaces[name] = {"mac": mac, "ip": []}
+
+        for line in addr_output.strip().split('\n'):
+            parts = line.split()
+            if len(parts) >= 4:
+                name = parts[1]
+                ip = parts[3]  # Giữ nguyên cả subnet mask
+                if name in interfaces:
+                    interfaces[name]["ip"].append(ip)
+
+        result = []
+        for name, info in interfaces.items():
+            if info["ip"] and not name.startswith(('lo', 'docker', 'veth')):
+                result.append(f"{name}: {info['ip'][0]} ({info['mac']})")
+
+        detail = "Interfaces:\n" + "\n".join(result) if result else "No network interfaces found."
+        return {
+            "item": "Network interfaces",
+            "result": "PASS" if result else "FAIL",
+            "detail": detail,
+            "passed": bool(result)
+        }
+    except Exception as e:
+        return {
+            "item": "Network interfaces",
             "result": "FAIL",
             "detail": str(e),
             "passed": False
@@ -74,7 +115,7 @@ def test_task():
                 if partition_name == '/dev/mmcblk1p2':
                     found_p2 = True
         ok = found_p1 and found_p2
-        detail = "Partitions and sizes:\n" + "\n".join(partitions) if partitions else "No partitions found."
+        detail = "Partitions and sizes:\n" + "\n+ ".join(partitions) if partitions else "No partitions found."
         detail_results.append({
             "item": "Disk partitions",
             "result": "PASS" if ok else "FAIL",
@@ -91,6 +132,8 @@ def test_task():
 
     # 3. Kiểm tra lsusb
     detail_results.append(check_lsusb())
+    # 4. Kiểm tra network interfaces
+    detail_results.append(list_network_interfaces())
 
     # Tổng kết
     num_pass = sum(1 for r in detail_results if r["passed"])
