@@ -117,7 +117,7 @@ def test_task():
                 if partition_name == '/dev/mmcblk1p2':
                     found_p2 = True
         ok = found_p1 and found_p2
-        detail = "Partitions and sizes:\n" + "\n+ ".join(partitions) if partitions else "No partitions found."
+        detail = "\nPartitions and sizes:" + "\n+ ".join(partitions) if partitions else "No partitions found."
 
         detail_results.append({
             "item": "Disk partitions",
