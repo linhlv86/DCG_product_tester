@@ -72,7 +72,7 @@
             var logDiv = $('#console-log-task');
             // Lọc log lịch sử để chỉ hiển thị của task này
             var filteredLogs = data.log.split('\n').filter(log => 
-                log.includes('Task: ' + taskName) || 
+                log.includes('[' + taskName) + ']' || 
                 log.includes('Starting task: ' + taskName) ||
                 log.includes('--- Auto Test Started ---') ||
                 log.includes('--- Auto Test Finished ---')
