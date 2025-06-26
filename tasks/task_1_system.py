@@ -152,7 +152,7 @@ def test_task():
     num_fail = len(detail_results) - num_pass
     all_pass = all(r["passed"] for r in detail_results)
     status = "Passed" if all_pass else "Failed"
-    message = global_message + "\n______________\n"+ f"Summary: {num_pass} PASS, {num_fail} FAIL."
+    message = "\n".join(global_message) + "\n______________\n"+ f"Summary: {num_pass} PASS, {num_fail} FAIL."
 
     return status, message, detail_results
 
