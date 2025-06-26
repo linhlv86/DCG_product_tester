@@ -33,7 +33,7 @@
                         <tr class="status-row-{{ detail.result|lower }}"> {# Uses detail.result to create class #}
                             <td>{{ detail.item }}</td>
                             <td class="status-cell-{{ detail.result|lower }}">{{ detail.result }}</td>
-                            <td>{{ detail.detail }}</td>
+                            <td><pre style="margin:0">{{ detail.detail }}</pre></td>
                         </tr>
                         {% else %} {# If no details, display Overall Test row #}
                         <tr id="task-overall-row-{{ task.name|replace(' ', '_') }}" class="status-row-{{ task_results[task.name].status|lower }}">

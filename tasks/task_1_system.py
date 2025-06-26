@@ -13,14 +13,14 @@ def test_task():
     try:
         output = subprocess.check_output(['/usr/bin/uname', '-a'], text=True).strip()
         detail_results.append({
-            "item": "uname -a",
+            "item": "System information",
             "result": "PASS",
             "detail": output,
             "passed": True
         })
     except Exception as e:
         detail_results.append({
-            "item": "uname -a",
+            "item": "System information",
             "result": "FAIL",
             "detail": str(e),
             "passed": False
@@ -28,13 +28,21 @@ def test_task():
 
     # 2. Kiểm tra số lượng phân vùng ổ đĩa
     try:
-        output = subprocess.check_output(['/usr/bin/lsblk', '-n', '-o', 'TYPE'], text=True)
-        partitions = [line for line in output.splitlines() if line.strip() == 'part']
+        output = subprocess.check_output(['/bin/df', '-h'], text=True)
+        lines = output.strip().split('\n')
+        partitions = []
+        for line in lines[1:]:  # Bỏ dòng tiêu đề
+            parts = line.split()
+            if len(parts) >= 2:
+                partition_name = parts[0]
+                size = parts[1]
+                partitions.append(f"{partition_name}: {size}")
         ok = len(partitions) >= 2
+        detail = "Partitions and sizes:\n" + "\n".join(partitions) if partitions else "No partitions found."
         detail_results.append({
             "item": "Disk partitions",
             "result": "PASS" if ok else "FAIL",
-            "detail": f"Partitions found: {len(partitions)}",
+            "detail": detail,
             "passed": ok
         })
     except Exception as e:
@@ -54,10 +62,5 @@ def test_task():
 
     return status, message, detail_results
 
-# Ví dụ sử dụng:
-if __name__ == "__main__":
-    status, message, detail_results = test_task()
-    print("Status:", status)
-    print("Message:", message)
-    print("Detail results:", detail_results)
+
 
