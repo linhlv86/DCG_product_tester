@@ -118,7 +118,7 @@ def execute_all_tasks():
     """
     global auto_test_running, task_results, task_logs
     tasks = app.config['LOADED_TASKS'] # Lấy danh sách task từ cấu hình ứng dụng
-
+    task_logs.clear()  # Xóa log cũ
     log_entry = f"[{datetime.now().strftime('%H:%M:%S')}] [INFO] --- Auto Test Started ---"
     task_logs.append(log_entry)
     socketio.emit('console_log_update', {'log': log_entry}, namespace='/')
