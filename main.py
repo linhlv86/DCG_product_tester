@@ -33,19 +33,25 @@ def auto_git_pull(interval=10):
     while True:
         try:
             GIT = '/usr/bin/git'
-            old_commit = subprocess.check_output([GIT, 'rev-parse', 'HEAD'], cwd=project_dir, text=True).strip()
-            subprocess.run([GIT, 'fetch', 'origin'], cwd=project_dir)
-            new_commit = subprocess.check_output([GIT, 'rev-parse', 'origin/main'], cwd=project_dir, text=True).strip()
-            if old_commit != new_commit:
-                print("Phát hiện phiên bản mới, đang cập nhật...")
+            
+            # Fetch remote changes
+            fetch_result = subprocess.run([GIT, 'fetch', 'origin'], 
+                                        cwd=project_dir, capture_output=True, text=True)
+            
+            if fetch_result.returncode == 0:
+                # Reset về remote version (luôn luôn, không kiểm tra diff)
+                reset_result = subprocess.run([GIT, 'reset', '--hard', 'origin/main'], 
+                                            cwd=project_dir, capture_output=True, text=True)
                 
-                # Reset về remote version (bỏ qua local changes)
-                subprocess.run([GIT, 'reset', '--hard', 'origin/main'], cwd=project_dir)
-                
-                print("Cập nhật hoàn tất - đã reset về phiên bản remote")
+                if reset_result.returncode == 0:
+                    print("Git auto-sync: OK")
+                else:
+                    print(f"Reset thất bại: {reset_result.stderr}")
+            else:
+                print(f"Fetch thất bại: {fetch_result.stderr}")
                 
         except Exception as e:
-            print("Git error:", e)
+            print(f"Git error: {e}")
         time.sleep(interval)
 
 # Chạy ở chế độ nền khi app khởi động
