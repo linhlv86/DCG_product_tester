@@ -15,26 +15,32 @@ def test_task():
     detail_results = []
     global_message = []
 
-    # Kiểm tra các thiết bị ttyUSB*
-    devices = glob.glob('/dev/ttyUSB*')
+    # Danh sách thiết bị cần tìm
+    required_devices = [f"/dev/ttyACM{i}" for i in range(4)]
+    # Lấy danh sách thiết bị thực tế
+    devices = glob.glob('/dev/ttyACM*')
     try:
         ls_output = subprocess.check_output(['/bin/ls', '/dev/ttyACM*'], text=True)
     except Exception as e:
         ls_output = str(e)
 
-    if not devices or len(devices) < 4:
+    # Kiểm tra đủ 4 thiết bị
+    found_all = all(dev in devices for dev in required_devices)
+    if not found_all:
+        missing = [dev for dev in required_devices if dev not in devices]
+        detail = f"Missing devices: {', '.join(missing)}\nls /dev/ttyACM* output:\n{ls_output}"
         detail_results.append({
-            "item": "USB serial devices",
+            "item": "Search USB serial devices",
             "result": "FAIL",
-            "detail": f"Not enough USB serial devices found.\nls /dev/ttyUSB* output:\n{ls_output}",
+            "detail": detail,
             "passed": False
         })
     else:
         detail = "USB serial devices found: " + ", ".join(devices)
-        detail += f"\nls /dev/ttyUSB* output:\n{ls_output}"
+        detail += f"\nls /dev/ttyACM* output:\n{ls_output}"
         global_message.append(detail)
         detail_results.append({
-            "item": "USB serial devices",
+            "item": "Search USB serial devices",
             "result": "PASS",
             "detail": detail,
             "passed": True
