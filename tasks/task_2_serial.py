@@ -18,7 +18,7 @@ def test_task():
     # Kiểm tra các thiết bị ttyUSB*
     devices = glob.glob('/dev/ttyUSB*')
     try:
-        ls_output = subprocess.check_output(['/bin/ls', '/dev/ttyUSB*'], text=True)
+        ls_output = subprocess.check_output(['/bin/ls', '/dev/ttyACM*'], text=True)
     except Exception as e:
         ls_output = str(e)
 
