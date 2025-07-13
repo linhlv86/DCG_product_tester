@@ -17,15 +17,21 @@ def test_task():
 
     # Kiểm tra các thiết bị ttyUSB*
     devices = glob.glob('/dev/ttyUSB*')
+    try:
+        ls_output = subprocess.check_output(['/bin/ls', '/dev/ttyUSB*'], text=True)
+    except Exception as e:
+        ls_output = str(e)
+
     if not devices or len(devices) < 4:
         detail_results.append({
             "item": "USB serial devices",
             "result": "FAIL",
-            "detail": "Not enough USB serial devices found.",
+            "detail": f"Not enough USB serial devices found.\nls /dev/ttyUSB* output:\n{ls_output}",
             "passed": False
         })
     else:
         detail = "USB serial devices found: " + ", ".join(devices)
+        detail += f"\nls /dev/ttyUSB* output:\n{ls_output}"
         global_message.append(detail)
         detail_results.append({
             "item": "USB serial devices",
