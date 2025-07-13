@@ -16,7 +16,7 @@ def test_task():
    #1 Check for ls /dev/ttyUSB*
    # it must be exist ttyUSB0..3
     try:
-        output = subprocess.check_output(['ls', '/dev/ttyUSB*'], text=True)
+        output = subprocess.check_output(['/usr/bin/ls', '/dev/ttyUSB*'], text=True)
         devices = output.strip().split('\n')
         if not devices or len(devices) < 4:
             raise FileNotFoundError("Not enough USB serial devices found.")
