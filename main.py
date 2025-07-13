@@ -37,15 +37,13 @@ def auto_git_pull(interval=10):
             subprocess.run([GIT, 'fetch', 'origin'], cwd=project_dir)
             new_commit = subprocess.check_output([GIT, 'rev-parse', 'origin/main'], cwd=project_dir, text=True).strip()
             if old_commit != new_commit:
-                print("New version detect,automatic pull và restart...")
-                subprocess.run([GIT, 'stash'], cwd=project_dir)
-                subprocess.run([GIT, 'pull', 'origin', 'main'], cwd=project_dir)
-                # subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'], cwd=project_dir)
-                subprocess.run([GIT, 'stash', 'pop'], cwd=project_dir)
-                # Restart lại process
-                # os.execv(sys.executable, [sys.executable] + sys.argv)
-            # else:
-            #     print("Không có thay đổi mới.")
+                print("Phát hiện phiên bản mới, đang cập nhật...")
+                
+                # Reset về remote version (bỏ qua local changes)
+                subprocess.run([GIT, 'reset', '--hard', 'origin/main'], cwd=project_dir)
+                
+                print("Cập nhật hoàn tất - đã reset về phiên bản remote")
+                
         except Exception as e:
             print("Git error:", e)
         time.sleep(interval)
