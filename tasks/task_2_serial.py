@@ -28,7 +28,7 @@ def test_task():
     found_all = all(dev in devices for dev in required_devices)
     if not found_all:
         missing = [dev for dev in required_devices if dev not in devices]
-        detail = f"Missing devices: {', '.join(missing)}\nls /dev/ttyACM* output:\n{ls_output}"
+        detail = f"Missing devices: {', '.join(missing)}\nUSB serial devices found:\n" + "\n".join(devices)
         detail_results.append({
             "item": "Search USB serial devices",
             "result": "FAIL",
@@ -36,8 +36,7 @@ def test_task():
             "passed": False
         })
     else:
-        detail = "USB serial devices found: " + ", ".join(devices)
-        detail += f"\nls /dev/ttyACM* output:\n{ls_output}"
+        detail = "USB serial devices found:\n" + "\n".join(devices)
         global_message.append(detail)
         detail_results.append({
             "item": "Search USB serial devices",
