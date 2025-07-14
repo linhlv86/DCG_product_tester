@@ -5,175 +5,203 @@ import json
 import re
 import glob
 import os
+import serial
+import threading
 
 # Mô tả của task này, sẽ hiển thị trên giao diện người dùng
-DESCRIPTION = "USB Serial Port Check"
+DESCRIPTION = "RS485 Communication Test"
+
+# Configuration constants
+GPIO_MODE = [129, 135, 122, 127]
+SERIAL_PORTS = [f"/dev/ttyACM{i}" for i in range(4)]
+BAUD_RATES = [1200, 9600, 38400, 115200]
 
 global_message = []
 
-def check_lsusb():
+def set_gpio_mode(gpio_pin, mode):
+    """Set GPIO mode: 1 for RS422, 0 for RS485"""
     try:
-        output = subprocess.check_output(['/usr/bin/lsusb'], text=True)
-        # Lọc các dòng thực sự là thiết bị và không chứa "Linux Foundation"
-        devices = [
-            line for line in output.strip().split('\n')
-            if line.strip() and "Linux Foundation" not in line
-        ]
-        found_terminus = any("Terminus Technology Inc. Hub" in line for line in devices)
-        found_ethernet = any("Ethernet 10/100/1000 Adapter" in line for line in devices)
-        ok = found_terminus and found_ethernet
-        devices.sort()  # Sắp xếp danh sách thiết bị
-        if devices:
-            detail = "USB devices found:\n" + "\n".join(f"+ {d}" for d in devices)
-        else:
-            detail = "No USB devices found."
-
-        if not found_terminus:
-            detail += "\nNotfound Terminus Technology Inc. Hub"
-        if not found_ethernet:
-            detail += "\nNot found Ethernet 10/100/1000 Adapter"
-        global global_message
-        global_message.append(detail)
-        return {
-            "item": "USB devices",
-            "result": "PASS" if ok else "FAIL",
-            "detail": detail,
-            "passed": ok
-        }
+        # Implement GPIO mode setting logic here
+        # Example using sysfs GPIO interface:
+        # echo {gpio_pin} > /sys/class/gpio/export
+        # echo out > /sys/class/gpio/gpio{gpio_pin}/direction
+        # echo {mode} > /sys/class/gpio/gpio{gpio_pin}/value
+        
+        # For now, simulate the GPIO setting
+        print(f"Setting GPIO {gpio_pin} to mode {mode} (0=RS485, 1=RS422)")
+        time.sleep(0.1)  # Small delay for GPIO setting
+        return True, ""
     except Exception as e:
+        return False, str(e)
+
+def check_serial_ports_exist():
+    """Check if all required serial ports exist"""
+    missing_ports = []
+    for port in SERIAL_PORTS:
+        if not os.path.exists(port):
+            missing_ports.append(port)
+    
+    if missing_ports:
+        detail = f"Missing serial ports: {', '.join(missing_ports)}"
         return {
-            "item": "USB devices",
+            "item": "Check required serial ports",
             "result": "FAIL",
-            "detail": str(e),
+            "detail": detail,
             "passed": False
         }
-
-def check_serial_ports():
-    """Check for USB serial ports /dev/ttyACM0-3"""
-    try:
-        required_ports = [f"/dev/ttyACM{i}" for i in range(4)]
-        existing_ports = []
-        missing_ports = []
-        
-        # Check each required port
-        for port in required_ports:
-            if os.path.exists(port):
-                existing_ports.append(port)
-            else:
-                missing_ports.append(port)
-        
-        # Get all ttyACM devices for additional info
-        all_ttyacm = glob.glob('/dev/ttyACM*')
-        all_ttyacm.sort()
-        
-        # Build detail message
-        detail_parts = []
-        if existing_ports:
-            detail_parts.append("Required serial ports found:")
-            for port in existing_ports:
-                detail_parts.append(f"+ {port}")
-        
-        if missing_ports:
-            detail_parts.append("Missing required serial ports:")
-            for port in missing_ports:
-                detail_parts.append(f"- {port}")
-        
-        if all_ttyacm:
-            detail_parts.append("ttyACM* devices in system:")
-            for port in all_ttyacm:
-                detail_parts.append(f"  {port}")
-        else:
-            detail_parts.append("No ttyACM devices found in system")
-        
-        detail = "\n".join(detail_parts)
-        
-        # Check if all required ports exist
-        all_found = len(existing_ports) == 4
-        
-        global global_message
-        global_message.append(detail)
-        
+    else:
+        detail = f"All required serial ports found: {', '.join(SERIAL_PORTS)}"
         return {
-            "item": "USB Serial Ports (/dev/ttyACM0-3)",
-            "result": "PASS" if all_found else "FAIL",
+            "item": "Check required serial ports", 
+            "result": "PASS",
             "detail": detail,
-            "passed": all_found
-        }
-        
-    except Exception as e:
-        return {
-            "item": "USB Serial Ports",
-            "result": "FAIL",
-            "detail": f"Error checking serial ports: {str(e)}",
-            "passed": False
+            "passed": True
         }
 
-def list_network_interfaces():
+def test_rs485_at_baud(baud_rate):
+    """Test RS485 communication at specific baud rate"""
+    results = []
+    
+    # Open all serial ports
+    serial_connections = {}
     try:
-        link_output = subprocess.check_output(['/sbin/ip', '-o', 'link'], text=True)
-        addr_output = subprocess.check_output(['/sbin/ip', '-o', '-4', 'addr'], text=True)
-
-        interfaces = {}
-        for line in link_output.strip().split('\n'):
-            match = re.match(r'\d+: (\S+):.*link/\w+ ([\da-f:]{17})', line)
-            if match:
-                name, mac = match.groups()
-                interfaces[name] = {"mac": mac, "ip": []}
-
-        for line in addr_output.strip().split('\n'):
-            parts = line.split()
-            if len(parts) >= 4:
-                name = parts[1]
-                ip = parts[3]  # giữ nguyên cả subnet mask
-                if name in interfaces:
-                    interfaces[name]["ip"].append(ip)
-
-        # Hiển thị tất cả interface, kể cả không có IP
-        result = []
-        for name, info in interfaces.items():
-            if not name.startswith(('lo', 'docker', 'veth')):
-                ip_str = info["ip"][0] if info["ip"] else "N/A"
-                result.append(f"{name}: {ip_str} ({info['mac']})")
-
-        # detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
-        result.sort()  # Sắp xếp kết quả theo tên interface
-        if result:
-            detail = "Interfaces found:\n" + "\n".join(f"+ {d}" for d in result)
-        else:
-            detail = "No interfaces found."
-
-        global global_message
-        global_message.append(detail)
-        return {
-            "item": "Network interfaces",
-            "result": "PASS" if result else "FAIL",
-            "detail": detail,
-            "passed": bool(result)
-        }
+        for port in SERIAL_PORTS:
+            ser = serial.Serial(port, baud_rate, timeout=1)
+            serial_connections[port] = ser
+            time.sleep(0.1)
     except Exception as e:
-        return {
-            "item": "Network interfaces",
+        return [{
+            "item": f"Open serial ports at {baud_rate} baud",
             "result": "FAIL",
-            "detail": str(e),
+            "detail": f"Failed to open serial ports: {str(e)}",
             "passed": False
-        }
+        }]
+    
+    try:
+        # Set all GPIO modes to 0 (RS485 mode)
+        for i, gpio_pin in enumerate(GPIO_MODE):
+            success, error = set_gpio_mode(gpio_pin, 0)
+            if not success:
+                results.append({
+                    "item": f"Set GPIO {gpio_pin} to RS485 mode",
+                    "result": "FAIL",
+                    "detail": f"Failed to set GPIO mode: {error}",
+                    "passed": False
+                })
+        
+        # Clear all serial buffers
+        for ser in serial_connections.values():
+            ser.reset_input_buffer()
+            ser.reset_output_buffer()
+        
+        time.sleep(0.2)  # Wait for buffers to clear
+        
+        # Test each port as transmitter
+        for tx_index, tx_port in enumerate(SERIAL_PORTS):
+            test_data = f"TEST_RS485_{tx_index}_{baud_rate}".encode('utf-8')
+            
+            try:
+                # Send test data from transmitter
+                serial_connections[tx_port].write(test_data)
+                serial_connections[tx_port].flush()
+                time.sleep(0.3)  # Wait for transmission
+                
+                # Check if other ports received the data
+                received_count = 0
+                failed_ports = []
+                
+                for rx_index, rx_port in enumerate(SERIAL_PORTS):
+                    if rx_index != tx_index:  # Skip transmitter port
+                        try:
+                            # Read available data
+                            data = serial_connections[rx_port].read_all()
+                            
+                            if data == test_data:
+                                received_count += 1
+                            else:
+                                failed_ports.append(f"{rx_port}(got:{data.decode() if data else 'nothing'})")
+                        except Exception as e:
+                            failed_ports.append(f"{rx_port}(error:{str(e)})")
+                
+                # Check if all other ports received data correctly
+                expected_receivers = len(SERIAL_PORTS) - 1  # All ports except transmitter
+                
+                if received_count == expected_receivers:
+                    results.append({
+                        "item": f"RS485 TX from {tx_port} at {baud_rate} baud",
+                        "result": "PASS",
+                        "detail": f"Data '{test_data.decode()}' successfully received by all {expected_receivers} ports",
+                        "passed": True
+                    })
+                    global_message.append(f"✓ {tx_port} -> all ports at {baud_rate} baud: PASS")
+                else:
+                    results.append({
+                        "item": f"RS485 TX from {tx_port} at {baud_rate} baud",
+                        "result": "FAIL",
+                        "detail": f"Only {received_count}/{expected_receivers} ports received data. Failed: {', '.join(failed_ports)}",
+                        "passed": False
+                    })
+                
+                # Clear buffers after each test
+                for ser in serial_connections.values():
+                    ser.reset_input_buffer()
+                    ser.reset_output_buffer()
+                
+                time.sleep(0.1)
+                
+            except Exception as e:
+                results.append({
+                    "item": f"RS485 TX from {tx_port} at {baud_rate} baud",
+                    "result": "FAIL",
+                    "detail": f"Transmission error: {str(e)}",
+                    "passed": False
+                })
+    
+    finally:
+        # Close all serial connections
+        for ser in serial_connections.values():
+            try:
+                ser.close()
+            except:
+                pass
+    
+    return results
 
 def test_task():
     detail_results = []
     global global_message
     global_message = []  # Reset global message
     
-    # Run all checks
-    detail_results.append(check_lsusb())
-    detail_results.append(check_serial_ports())
-    detail_results.append(list_network_interfaces())
-
-    # Tổng kết
+    # First check if all serial ports exist
+    port_check = check_serial_ports_exist()
+    detail_results.append(port_check)
+    
+    if not port_check["passed"]:
+        # If ports don't exist, return early
+        status = "Failed"
+        message = port_check["detail"]
+        return status, message, detail_results
+    
+    # Test RS485 communication for each baud rate
+    for baud_rate in BAUD_RATES:
+        global_message.append(f"\n--- Testing at {baud_rate} baud ---")
+        
+        baud_results = test_rs485_at_baud(baud_rate)
+        detail_results.extend(baud_results)
+        
+        # Count pass/fail for this baud rate
+        baud_pass = sum(1 for r in baud_results if r["passed"])
+        baud_total = len(baud_results)
+        global_message.append(f"Baud {baud_rate}: {baud_pass}/{baud_total} tests passed")
+    
+    # Summary
     num_pass = sum(1 for r in detail_results if r["passed"])
     num_fail = len(detail_results) - num_pass
     all_pass = all(r["passed"] for r in detail_results)
     status = "Passed" if all_pass else "Failed"
-    message = "\n".join(global_message) + f"\nSummary: {num_pass} PASS, {num_fail} FAIL."
+    
+    summary = f"\nRS485 Test Summary: {num_pass} PASS, {num_fail} FAIL"
+    message = "\n".join(global_message) + summary
 
     return status, message, detail_results
 
