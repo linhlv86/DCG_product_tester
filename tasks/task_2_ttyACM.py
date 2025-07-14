@@ -79,7 +79,7 @@ def check_serial_ports():
                 detail_parts.append(f"- {port}")
         
         if all_ttyacm:
-            detail_parts.append("All ttyACM devices in system:")
+            detail_parts.append("ttyACM* devices in system:")
             for port in all_ttyacm:
                 detail_parts.append(f"  {port}")
         else:
@@ -108,55 +108,6 @@ def check_serial_ports():
             "passed": False
         }
 
-def list_network_interfaces():
-    try:
-        link_output = subprocess.check_output(['/sbin/ip', '-o', 'link'], text=True)
-        addr_output = subprocess.check_output(['/sbin/ip', '-o', '-4', 'addr'], text=True)
-
-        interfaces = {}
-        for line in link_output.strip().split('\n'):
-            match = re.match(r'\d+: (\S+):.*link/\w+ ([\da-f:]{17})', line)
-            if match:
-                name, mac = match.groups()
-                interfaces[name] = {"mac": mac, "ip": []}
-
-        for line in addr_output.strip().split('\n'):
-            parts = line.split()
-            if len(parts) >= 4:
-                name = parts[1]
-                ip = parts[3]  # giữ nguyên cả subnet mask
-                if name in interfaces:
-                    interfaces[name]["ip"].append(ip)
-
-        # Hiển thị tất cả interface, kể cả không có IP
-        result = []
-        for name, info in interfaces.items():
-            if not name.startswith(('lo', 'docker', 'veth')):
-                ip_str = info["ip"][0] if info["ip"] else "N/A"
-                result.append(f"{name}: {ip_str} ({info['mac']})")
-
-        # detail = "Interfaces:\n" + "\n-".join(result) if result else "No network interfaces found."
-        result.sort()  # Sắp xếp kết quả theo tên interface
-        if result:
-            detail = "Interfaces found:\n" + "\n".join(f"+ {d}" for d in result)
-        else:
-            detail = "No interfaces found."
-
-        global global_message
-        global_message.append(detail)
-        return {
-            "item": "Network interfaces",
-            "result": "PASS" if result else "FAIL",
-            "detail": detail,
-            "passed": bool(result)
-        }
-    except Exception as e:
-        return {
-            "item": "Network interfaces",
-            "result": "FAIL",
-            "detail": str(e),
-            "passed": False
-        }
 
 def test_task():
     detail_results = []
@@ -166,7 +117,6 @@ def test_task():
     # Run all checks
     detail_results.append(check_lsusb())
     detail_results.append(check_serial_ports())
-    detail_results.append(list_network_interfaces())
 
     # Tổng kết
     num_pass = sum(1 for r in detail_results if r["passed"])
