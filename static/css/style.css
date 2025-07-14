@@ -191,8 +191,8 @@ body {
     background-color: #333333;
     color: rgb(0, 120 , 0);
     padding: 15px;
-    height: 500px;
-    max-height: 800px; /* Giới hạn chiều cao tối đa */
+    height: 300px;
+    max-height: 600px; /* Giới hạn chiều cao tối đa */
     overflow-y: scroll; /* Sử dụng auto để thanh cuộn chỉ xuất hiện khi cần */
     white-space: pre-wrap; /* Giữ định dạng khoảng trắng và xuống dòng */
     font-family: 'Consolas', 'Monaco', monospace;
