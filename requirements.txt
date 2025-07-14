@@ -1,0 +1,44 @@
+# Web framework
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+
+# Socket.IO server
+python-socketio==5.8.0
+python-engineio==4.7.1
+
+# Async support
+eventlet==0.33.3
+
+# Serial communication
+pyserial==3.5
+
+# System utilities
+psutil==5.9.5
+
+# GPIO control (for Orange Pi)
+RPi.GPIO==0.7.1
+
+# Alternative GPIO library for Orange Pi
+OrangePi.GPIO==0.6.5
+
+# HTTP requests (if needed)
+requests==2.31.0
+
+# JSON handling (built-in, but explicit)
+# json - built into Python
+
+# Regular expressions (built-in)
+# re - built into Python
+
+# File operations (built-in)
+# glob - built into Python
+# os - built into Python
+
+# Subprocess (built-in)
+# subprocess - built into Python
+
+# Time operations (built-in)
+# time - built into Python
+
+# Threading (built-in)
+# threading - built into Python
