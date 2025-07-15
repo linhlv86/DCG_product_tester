@@ -69,6 +69,8 @@ start_gpio_blink_process()
 
 # Khởi động thread auto pull khi chạy main.py
 if __name__ == "__main__":
+    threading.Thread(target=send_udp_broadcast, daemon=True).start()
+    start_gpio_blink_process()
     threading.Thread(target=auto_git_pull, daemon=True).start()
     print("Starting Flask-SocketIO server...")
     try:
