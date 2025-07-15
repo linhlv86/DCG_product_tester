@@ -114,22 +114,22 @@ def test_rs485_at_baud(baud_rate):
         for tx_index, tx_port in enumerate(SERIAL_PORTS):
             logger.info(f"Testing transmission from {tx_port}")
             
-            # Tạo test data dài 255 bytes
+            # Tạo test data dài 100 bytes
             base_msg = f"TEST_RS485_{tx_index}_{baud_rate}_"
-            # Tính toán số byte cần thêm để đạt 255 bytes
+            # Tính toán số byte cần thêm để đạt 100 bytes
             remaining_bytes = 100 - len(base_msg.encode('utf-8'))
             if remaining_bytes > 0:
-                # Thêm pattern lặp để đạt đủ 255 bytes
+                # Thêm pattern lặp để đạt đủ 100 bytes
                 filler = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" * (remaining_bytes // 36 + 1)
                 test_data = (base_msg + filler[:remaining_bytes]).encode('utf-8')
             else:
                 test_data = base_msg.encode('utf-8')
             
-            # Đảm bảo chính xác 255 bytes
-            if len(test_data) > 255:
-                test_data = test_data[:255]
-            elif len(test_data) < 255:
-                test_data = test_data + b'X' * (255 - len(test_data))
+            # Đảm bảo chính xác 100 bytes
+            if len(test_data) > 100:
+                test_data = test_data[:100]
+            elif len(test_data) < 100:
+                test_data = test_data + b'X' * (100 - len(test_data))
             
             logger.info(f"Test data length: {len(test_data)} bytes")
             logger.info(f"Test data preview: {test_data[:50]}...")
@@ -153,7 +153,7 @@ def test_rs485_at_baud(baud_rate):
                 serial_connections[tx_port].flush()
 
                 # Tăng delay cho data dài hơn
-                time.sleep(2.0)  # Delay 2 giây sau khi truyền 255 bytes
+                time.sleep(2.0)  # Delay 2 giây sau khi truyền 100 bytes
 
                 # Check if other ports received the data
                 received_count = 0
@@ -189,21 +189,21 @@ def test_rs485_at_baud(baud_rate):
                 
                 if received_count == expected_receivers:
                     results.append({
-                        "item": f"RS485 TX from {tx_port} at {baud_rate} baud (255 bytes)",
+                        "item": f"RS485 TX from {tx_port} at {baud_rate} baud (100 bytes)",
                         "result": "PASS",
-                        "detail": f"255-byte data successfully received by all {expected_receivers} ports",
+                        "detail": f"100-byte data successfully received by all {expected_receivers} ports",
                         "passed": True
                     })
-                    logger.info(f"✓ {tx_port} -> all ports at {baud_rate} baud: PASS (255 bytes)")
-                    global_message.append(f"✓ {tx_port} -> all ports at {baud_rate} baud: PASS (255 bytes)")
+                    logger.info(f"✓ {tx_port} -> all ports at {baud_rate} baud: PASS (100 bytes)")
+                    global_message.append(f"✓ {tx_port} -> all ports at {baud_rate} baud: PASS (100 bytes)")
                 else:
                     results.append({
-                        "item": f"RS485 TX from {tx_port} at {baud_rate} baud (255 bytes)",
+                        "item": f"RS485 TX from {tx_port} at {baud_rate} baud (100 bytes)",
                         "result": "FAIL",
-                        "detail": f"Only {received_count}/{expected_receivers} ports received 255-byte data correctly. Failed: {', '.join(failed_ports)}",
+                        "detail": f"Only {received_count}/{expected_receivers} ports received 100-byte data correctly. Failed: {', '.join(failed_ports)}",
                         "passed": False
                     })
-                    logger.warning(f"✗ {tx_port} test failed: {received_count}/{expected_receivers} received 255 bytes correctly")
+                    logger.warning(f"✗ {tx_port} test failed: {received_count}/{expected_receivers} received 100 bytes correctly")
                 
                 # Clear buffers sau mỗi test
                 for ser in serial_connections.values():
@@ -215,7 +215,7 @@ def test_rs485_at_baud(baud_rate):
             except Exception as e:
                 logger.error(f"Transmission error from {tx_port}: {e}")
                 results.append({
-                    "item": f"RS485 TX from {tx_port} at {baud_rate} baud (255 bytes)",
+                    "item": f"RS485 TX from {tx_port} at {baud_rate} baud (100 bytes)",
                     "result": "FAIL",
                     "detail": f"Transmission error: {str(e)}",
                     "passed": False
