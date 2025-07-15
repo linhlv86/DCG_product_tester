@@ -182,7 +182,7 @@ def test_rs485_at_baud(baud_rate):
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
                 
-                time.sleep(0.3)  # Delay sau khi clear buffer
+                time.sleep(0.5)  # Delay sau khi clear buffer (thay đổi từ 0.3s thành 0.5s)
                 
             except Exception as e:
                 logger.error(f"Transmission error from {tx_port}: {e}")
