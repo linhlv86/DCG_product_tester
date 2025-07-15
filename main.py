@@ -80,7 +80,7 @@ def blink_gpios_thread():
         # Chỉ bật 1 GPIO trong list, các GPIO còn lại tắt
         for i, gpio in enumerate(other_gpios):
             state = 1 if i == idx % len(other_gpios) else 0
-            subprocess.run(["gpioset", gpio[0], f"{gpio[1]}={state}"])
+            subprocess.Popen(["gpioset", gpio[0], f"{gpio[1]}={state}"])
 
         time.sleep(0.5)
         idx += 1
