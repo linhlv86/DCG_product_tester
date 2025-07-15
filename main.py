@@ -57,15 +57,37 @@ def auto_git_pull(interval=10):
             print(f"Git error: {e}")
         time.sleep(interval)
 
-def run_blink_script():
-    """Khởi động /root/blink.sh ở chế độ nền"""
-    try:
-        subprocess.Popen(["bash", "/root/blink.sh"])
-    except Exception as e:
-        print(f"Không thể chạy /root/blink.sh: {e}")
+def blink_gpios_thread():
+    import subprocess
+    import time
+
+    gpio_119 = ("gpiochip3", "23")  # GPIO119
+    other_gpios = [
+        ("gpiochip4", "5"),   # GPIO133
+        ("gpiochip4", "4"),   # GPIO132
+        ("gpiochip4", "6"),   # GPIO134
+        ("gpiochip3", "29"),  # GPIO125 (cần xác nhận lại line nếu chưa đúng)
+    ]
+
+    idx = 0
+    gpio119_state = 0
+
+    while True:
+        # Toggle GPIO119
+        gpio119_state = 1 - gpio119_state
+        subprocess.run(["gpioset", gpio_119[0], f"{gpio_119[1]}={gpio119_state}"])
+
+        # Chỉ bật 1 GPIO trong list, các GPIO còn lại tắt
+        for i, gpio in enumerate(other_gpios):
+            state = 1 if i == idx % len(other_gpios) else 0
+            subprocess.run(["gpioset", gpio[0], f"{gpio[1]}={state}"])
+
+        time.sleep(0.5)
+        idx += 1
 
 # Chạy ở chế độ nền khi app khởi động
 threading.Thread(target=send_udp_broadcast, daemon=True).start()
+threading.Thread(target=blink_gpios_thread, daemon=True).start()
 
 # Khởi động thread auto pull khi chạy main.py
 if __name__ == "__main__":
