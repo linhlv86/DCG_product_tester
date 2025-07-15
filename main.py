@@ -58,10 +58,12 @@ def auto_git_pull(interval=10):
         time.sleep(interval)
 
 def start_gpio_blink_process():
-    # Đường dẫn tới script blink
     script_path = "/home/orangepi/product_tester/DCG_product_tester/tasks/bash/gpio_test.py"
-    # Chạy script blink như một process độc lập
-    subprocess.Popen(["python3", script_path])
+    try:
+        proc = subprocess.Popen(["python3", script_path])
+        print(f"Started blink process, pid={proc.pid}")
+    except Exception as e:
+        print(f"Blink process error: {e}")
 
 # Chạy ở chế độ nền khi app khởi động
 threading.Thread(target=send_udp_broadcast, daemon=True).start()
