@@ -20,7 +20,7 @@ DESCRIPTION = "RS485 Communication Test"
 GPIO_MODE = [129, 135, 122, 127]
 SERIAL_PORTS = [f"/dev/ttyACM{i}" for i in range(4)]
 BAUD_RATES = [1200, 9600, 38400, 115200]
-BAUD_DELAY = [1, 0.5, 0.2, 0.2]  # Delay after sending data for each baud rate
+BAUD_DELAY = [2, 0.5, 0.2, 0.1]  # Delay after sending data for each baud rate
 global_message = []
 TEST_DATA_LEN = 200  # Số byte test, dễ dàng thay đổi
 
