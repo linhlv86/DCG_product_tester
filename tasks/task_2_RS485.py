@@ -116,7 +116,7 @@ def test_rs485_at_baud(baud_rate):
         for ser in serial_connections.values():
             ser.reset_input_buffer()
             ser.reset_output_buffer()
-        time.sleep(baud_delay)
+        time.sleep(0.2)
 
         # Định nghĩa các cặp kiểm tra chéo
         port_pairs = [
@@ -146,7 +146,7 @@ def test_rs485_at_baud(baud_rate):
             for ser in serial_connections.values():
                 ser.reset_input_buffer()
                 ser.reset_output_buffer()
-            time.sleep(baud_delay)
+            time.sleep(0.2)
 
             # Gửi dữ liệu từ TX
             serial_connections[tx_port].write(test_data)
@@ -206,7 +206,7 @@ def test_rs485_at_baud(baud_rate):
             for ser in serial_connections.values():
                 ser.reset_input_buffer()
                 ser.reset_output_buffer()
-            time.sleep(baud_delay)
+            time.sleep(0.2)
 
     finally:
         logger.info("Closing serial connections...")
