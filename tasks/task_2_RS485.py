@@ -175,17 +175,26 @@ def test_rs485_at_baud(baud_rate):
                                 logger.info(f"✓ {rx_port} received correct data ({len(data)} bytes)")
                             else:
                                 if data:
-                                    logger.warning(f"✗ {rx_port} received wrong data: {len(data)} bytes vs expected {len(test_data)} bytes")
-                                    # So sánh preview
-                                    if len(data) > 50:
-                                        logger.warning(f"  Expected preview: {test_data[:50]}")
-                                        logger.warning(f"  Received preview: {data[:50]}")
+                                    # Tìm vị trí đầu tiên bị sai
+                                    diff_index = next((i for i in range(min(len(data), len(test_data))) if data[i] != test_data[i]), None)
+                                    if diff_index is not None:
+                                        start = max(0, diff_index - 10)
+                                        end = min(len(test_data), diff_index + 10)
+                                        expected_snippet = test_data[start:end]
+                                        received_snippet = data[start:end]
+                                        detail_msg = (
+                                            f"Diff at byte {diff_index}:\n"
+                                            f"Expected: {expected_snippet}\n"
+                                            f"Received: {received_snippet}"
+                                        )
+                                    else:
+                                        detail_msg = f"Data length mismatch or error. Expected: {len(test_data)}, Received: {len(data)}"
+                                    logger.warning(f"✗ {rx_port} received wrong data at byte {diff_index}")
                                     failed_ports.append(f"{rx_port}(got:{len(data)}bytes)")
-                                    # Ghi ra detail đoạn data lỗi
                                     results.append({
                                         "item": f"RS485 RX from {rx_port} at {baud_rate} baud (100 bytes)",
                                         "result": "FAIL",
-                                        "detail": f"Expected: {test_data[:50]}...\nReceived: {data[:50]}...",
+                                        "detail": detail_msg,
                                         "passed": False
                                     })
                                 else:
