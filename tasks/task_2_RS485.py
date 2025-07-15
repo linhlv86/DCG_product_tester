@@ -22,6 +22,7 @@ SERIAL_PORTS = [f"/dev/ttyACM{i}" for i in range(4)]
 BAUD_RATES = [1200, 9600, 38400, 115200]
 BAUD_DELAY = [1, 0.5, 0.2, 0.2]  # Delay after sending data for each baud rate
 global_message = []
+TEST_DATA_LEN = 200  # Số byte test, dễ dàng thay đổi
 
 def set_gpio_mode(gpio_pin, mode):
     """
@@ -129,18 +130,18 @@ def test_rs485_at_baud(baud_rate):
         for tx_port, rx_port in port_pairs:
             logger.info(f"Testing TX {tx_port} -> RX {rx_port}")
 
-            # Tạo test data dài 100 bytes
+            # Tạo test data dài TEST_DATA_LEN bytes
             base_msg = f"TEST_RS485_{tx_port}_to_{rx_port}_{baud_rate}_"
-            remaining_bytes = 100 - len(base_msg.encode('utf-8'))
+            remaining_bytes = TEST_DATA_LEN - len(base_msg.encode('utf-8'))
             if remaining_bytes > 0:
                 filler = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" * (remaining_bytes // 36 + 1)
                 test_data = (base_msg + filler[:remaining_bytes]).encode('utf-8')
             else:
                 test_data = base_msg.encode('utf-8')
-            if len(test_data) > 100:
-                test_data = test_data[:100]
-            elif len(test_data) < 100:
-                test_data = test_data + b'X' * (100 - len(test_data))
+            if len(test_data) > TEST_DATA_LEN:
+                test_data = test_data[:TEST_DATA_LEN]
+            elif len(test_data) < TEST_DATA_LEN:
+                test_data = test_data + b'X' * (TEST_DATA_LEN - len(test_data))
 
             # Clear buffers trước khi test
             for ser in serial_connections.values():
@@ -159,9 +160,9 @@ def test_rs485_at_baud(baud_rate):
                 logger.info(f"Port {rx_port} received: {len(data)} bytes")
                 if data == test_data:
                     results.append({
-                        "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud (100 bytes)",
+                        "item": f"@{baud_rate}:{tx_port}->{rx_port})",
                         "result": "PASS",
-                        "detail": f"100-byte data successfully received",
+                        "detail": f"✓{TEST_DATA_LEN}-byte data successfully received",
                         "passed": True
                     })
                     logger.info(f"✓ {tx_port} -> {rx_port} at {baud_rate} baud: PASS")
@@ -187,7 +188,7 @@ def test_rs485_at_baud(baud_rate):
                             f"Diff bytes: {diff_count}/{len(test_data)} ({diff_percent}%)"
                         )
                     results.append({
-                        "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud (100 bytes)",
+                        "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
                         "result": "FAIL",
                         "detail": detail_msg,
                         "passed": False
@@ -195,7 +196,7 @@ def test_rs485_at_baud(baud_rate):
                     logger.warning(f"✗ {tx_port} -> {rx_port} received wrong data at byte {diff_index}, diff {diff_percent}%")
             except Exception as e:
                 results.append({
-                    "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud (100 bytes)",
+                    "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
                     "result": "FAIL",
                     "detail": f"Error reading from {rx_port}: {str(e)}",
                     "passed": False
@@ -245,7 +246,7 @@ def test_task():
             # Delay giữa các baud rate tests
             if baud_index > 0:
                 logger.info(f"Waiting before testing baud rate {baud_rate}...")
-                time.sleep(0.5)  # Delay 2 giây giữa các baud rate
+                time.sleep(0.2)  # Delay .2 giây giữa các baud rate
             
             logger.info(f"Testing at {baud_rate} baud...")
             global_message.append(f"--- Testing at {baud_rate} baud ---")
