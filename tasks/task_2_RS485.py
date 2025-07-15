@@ -209,7 +209,7 @@ def test_task():
             # If ports don't exist, return early
             logger.error("Serial ports check failed, aborting test")
             status = "Failed"
-            message = port_check["detail"]
+            message = port_check["detail"] + f"\nSummary: 0 PASS, 1 FAIL."
             return status, message, detail_results
         
         # Test RS485 communication for each baud rate
@@ -227,23 +227,26 @@ def test_task():
             logger.info(f"Baud {baud_rate}: {baud_pass}/{baud_total} tests passed")
             global_message.append(f"Baud {baud_rate}: {baud_pass}/{baud_total} tests passed")
         
-        # Summary
+        # Tổng kết
         num_pass = sum(1 for r in detail_results if r["passed"])
         num_fail = len(detail_results) - num_pass
         all_pass = all(r["passed"] for r in detail_results)
         status = "Passed" if all_pass else "Failed"
-        
-        summary = f"\nRS485 Test Summary: {num_pass} PASS, {num_fail} FAIL"
-        message = "\n".join(global_message) + summary
-        
+        message = "\n".join(global_message) + f"\nSummary: {num_pass} PASS, {num_fail} FAIL."
+
         logger.info(f"=== RS485 Test Completed: {status} ===")
-        logger.info(summary)
-        
+        logger.info(f"Summary: {num_pass} PASS, {num_fail} FAIL")
+
         return status, message, detail_results
         
     except Exception as e:
         logger.error(f"Unexpected error in test_task: {e}")
-        return "Failed", f"Test error: {str(e)}", detail_results
+        # Tổng kết khi có lỗi
+        num_pass = sum(1 for r in detail_results if r["passed"])
+        num_fail = len(detail_results) - num_pass + 1  # +1 cho lỗi exception
+        status = "Failed"
+        message = "\n".join(global_message) + f"\nTest error: {str(e)}\nSummary: {num_pass} PASS, {num_fail} FAIL."
+        return status, message, detail_results
 
 
 
