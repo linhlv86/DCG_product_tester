@@ -20,7 +20,7 @@ DESCRIPTION = "RS485 Communication Test"
 GPIO_MODE = [129, 135, 122, 127]
 SERIAL_PORTS = [f"/dev/ttyACM{i}" for i in range(4)]
 BAUD_RATES = [1200, 9600, 38400, 115200]
-
+BAUD_DELAY = [1, 0.5, 0.2, 0.2]  # Delay after sending data for each baud rate
 global_message = []
 
 def set_gpio_mode(gpio_pin, mode):
@@ -108,7 +108,7 @@ def test_rs485_at_baud(baud_rate):
             ser.reset_input_buffer()
             ser.reset_output_buffer()
         
-        time.sleep(0.5)  # Tăng delay để đảm bảo buffers clear hoàn toàn
+        time.sleep(0.1)  # Tăng delay để đảm bảo buffers clear hoàn toàn
         
         # Test each port as transmitter
         for tx_index, tx_port in enumerate(SERIAL_PORTS):
@@ -137,23 +137,22 @@ def test_rs485_at_baud(baud_rate):
             # Delay giữa các test để tránh xung đột
             if tx_index > 0:
                 logger.info(f"Waiting before test {tx_index + 1}...")
-                time.sleep(1.0)  # Delay 1 giây giữa các lần test
+                time.sleep(0.5)  # Delay 1 giây giữa các lần test
             
             try:
                 # Clear buffers trước khi test
                 for ser in serial_connections.values():
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
-                
-                time.sleep(0.5)  # Delay 0.5s sau khi clear buffer
-                
+
+                time.sleep(0.1)  # Delay 0.1s sau khi clear buffer
                 # Send test data from transmitter
                 logger.info(f"Sending {len(test_data)} bytes data...")
                 serial_connections[tx_port].write(test_data)
                 serial_connections[tx_port].flush()
 
                 # Tăng delay cho data dài hơn
-                time.sleep(2.0)  # Delay 2 giây sau khi truyền 100 bytes
+                time.sleep(0.5)  # Delay 2 giây sau khi truyền 100 bytes
 
                 # Check if other ports received the data
                 received_count = 0
@@ -210,7 +209,7 @@ def test_rs485_at_baud(baud_rate):
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
                 
-                time.sleep(1.0)  # Tăng delay sau khi clear buffer cho data lớn
+                time.sleep(0.1)  # Tăng delay sau khi clear buffer cho data lớn
                 
             except Exception as e:
                 logger.error(f"Transmission error from {tx_port}: {e}")
@@ -259,7 +258,7 @@ def test_task():
             # Delay giữa các baud rate tests
             if baud_index > 0:
                 logger.info(f"Waiting before testing baud rate {baud_rate}...")
-                time.sleep(2.0)  # Delay 2 giây giữa các baud rate
+                time.sleep(0.5)  # Delay 2 giây giữa các baud rate
             
             logger.info(f"Testing at {baud_rate} baud...")
             global_message.append(f"--- Testing at {baud_rate} baud ---")

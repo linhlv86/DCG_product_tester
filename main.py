@@ -66,7 +66,6 @@ def run_blink_script():
 
 # Chạy ở chế độ nền khi app khởi động
 threading.Thread(target=send_udp_broadcast, daemon=True).start()
-threading.Thread(target=run_blink_script, daemon=True).start()
 
 # Khởi động thread auto pull khi chạy main.py
 if __name__ == "__main__":
