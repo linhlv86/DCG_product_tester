@@ -20,8 +20,8 @@ DESCRIPTION = "RS485 Communication Test"
 GPIO_MODE = [129, 135, 122, 127]
 SERIAL_PORTS = [f"/dev/ttyACM{i}" for i in range(4)]
 BAUD_RATES = [1200, 9600, 38400, 115200]
-BAUD_DELAY = [2, 0.5, 0.2, 0.1]  # Delay after sending data for each baud rate
 global_message = []
+
 TEST_DATA_LEN = 200  # Số byte test, dễ dàng thay đổi
 
 def set_gpio_mode(gpio_pin, mode):
@@ -79,6 +79,9 @@ def check_serial_ports_exist():
             "passed": True
         }
 
+def calc_baud_delay(byte_count, baudrate):
+    return byte_count * 10 / baudrate + 0.1
+
 def test_rs485_at_baud(baud_rate):
     """Test RS485 communication at specific baud rate"""
     logger.info(f"Starting RS485 test at {baud_rate} baud")
@@ -102,11 +105,7 @@ def test_rs485_at_baud(baud_rate):
         }]
     
     try:
-        try:
-            baud_index = BAUD_RATES.index(baud_rate)
-            baud_delay = BAUD_DELAY[baud_index]
-        except Exception:
-            baud_delay = 0.5
+        baud_delay = calc_baud_delay(TEST_DATA_LEN, baud_rate)
 
         # Set all GPIO modes to 0 (RS485 mode)
         logger.info("Setting GPIO modes to RS485...")
