@@ -13,47 +13,8 @@ import subprocess
 import os
 import sys
 
-# Thêm import để điều khiển GPIO
-try:
-    import RPi.GPIO as GPIO
-    GPIO_AVAILABLE = True
-except ImportError:
-    GPIO_AVAILABLE = False
-
-def gpio_control_task():
-    """Task điều khiển GPIO lần lượt: chỉ 1 GPIO ON tại một thời điểm"""
-    gpio_pins = [133, 132, 134, 125]
-    
-    if not GPIO_AVAILABLE:
-        return
-    
-    try:
-        # Thiết lập mode BCM
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        
-        # Khởi tạo các GPIO pin như output
-        for pin in gpio_pins:
-            GPIO.setup(pin, GPIO.OUT, initial=GPIO.LOW)
-        
-        while True:
-            for pin in gpio_pins:
-                # Tắt tất cả GPIO trước
-                GPIO.output(gpio_pins, GPIO.LOW)
-                
-                # Bật chỉ GPIO hiện tại
-                GPIO.output(pin, GPIO.HIGH)
-                time.sleep(0.3)  # 300ms ON
-                
-                # Tắt GPIO hiện tại
-                GPIO.output(pin, GPIO.LOW)
-                time.sleep(1.0)  # 1000ms OFF
-                
-    except Exception as e:
-        print(f"GPIO error: {e}")
-    finally:
-        if GPIO_AVAILABLE:
-            GPIO.cleanup()
+# Bỏ hết tác vụ GPIO
+# Xóa toàn bộ phần import, biến, hàm và thread liên quan đến GPIO
 
 def send_udp_broadcast(port=5005, interval=1):
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -96,11 +57,16 @@ def auto_git_pull(interval=10):
             print(f"Git error: {e}")
         time.sleep(interval)
 
+def run_blink_script():
+    """Khởi động /root/blink.sh ở chế độ nền"""
+    try:
+        subprocess.Popen(["bash", "/root/blink.sh"])
+    except Exception as e:
+        print(f"Không thể chạy /root/blink.sh: {e}")
+
 # Chạy ở chế độ nền khi app khởi động
 threading.Thread(target=send_udp_broadcast, daemon=True).start()
-
-# Khởi động GPIO control thread
-threading.Thread(target=gpio_control_task, daemon=True).start()
+threading.Thread(target=run_blink_script, daemon=True).start()
 
 # Khởi động thread auto pull khi chạy main.py
 if __name__ == "__main__":
@@ -109,6 +75,4 @@ if __name__ == "__main__":
     try:
         socketio.run(app, debug=True, host='0.0.0.0', port=80)
     finally:
-        # Cleanup GPIO khi thoát
-        if GPIO_AVAILABLE:
-            GPIO.cleanup()
+        pass  # Không cần cleanup GPIO
