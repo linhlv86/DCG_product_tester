@@ -68,8 +68,6 @@ def test_rs485_at_baud(baud_rate):
     """Test RS485 communication at specific baud rate"""
     logger.info(f"Starting RS485 test at {baud_rate} baud")
     results = []
-    
-    # Open all serial ports
     serial_connections = {}
     try:
         logger.info("Opening serial ports...")
@@ -89,6 +87,13 @@ def test_rs485_at_baud(baud_rate):
         }]
     
     try:
+        # Xác định index của baud_rate để lấy delay phù hợp
+        try:
+            baud_index = BAUD_RATES.index(baud_rate)
+            baud_delay = BAUD_DELAY[baud_index]
+        except Exception:
+            baud_delay = 0.5  # fallback nếu không tìm thấy
+        
         # Set all GPIO modes to 0 (RS485 mode)
         logger.info("Setting GPIO modes to RS485...")
         for i, gpio_pin in enumerate(GPIO_MODE):
@@ -108,7 +113,7 @@ def test_rs485_at_baud(baud_rate):
             ser.reset_input_buffer()
             ser.reset_output_buffer()
         
-        time.sleep(0.1)  # Tăng delay để đảm bảo buffers clear hoàn toàn
+        time.sleep(baud_delay)  # Sử dụng delay phù hợp sau khi clear buffer
         
         # Test each port as transmitter
         for tx_index, tx_port in enumerate(SERIAL_PORTS):
@@ -137,7 +142,7 @@ def test_rs485_at_baud(baud_rate):
             # Delay giữa các test để tránh xung đột
             if tx_index > 0:
                 logger.info(f"Waiting before test {tx_index + 1}...")
-                time.sleep(0.5)  # Delay 1 giây giữa các lần test
+                time.sleep(baud_delay)  # Sử dụng delay phù hợp
             
             try:
                 # Clear buffers trước khi test
@@ -145,14 +150,14 @@ def test_rs485_at_baud(baud_rate):
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
 
-                time.sleep(0.1)  # Delay 0.1s sau khi clear buffer
+                time.sleep(baud_delay)  # Delay sau khi clear buffer
+
                 # Send test data from transmitter
                 logger.info(f"Sending {len(test_data)} bytes data...")
                 serial_connections[tx_port].write(test_data)
                 serial_connections[tx_port].flush()
 
-                # Tăng delay cho data dài hơn
-                time.sleep(0.5)  # Delay 2 giây sau khi truyền 100 bytes
+                time.sleep(baud_delay)  # Delay sau khi truyền
 
                 # Check if other ports received the data
                 received_count = 0
@@ -209,7 +214,7 @@ def test_rs485_at_baud(baud_rate):
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
                 
-                time.sleep(0.1)  # Tăng delay sau khi clear buffer cho data lớn
+                time.sleep(baud_delay)  # Delay sau khi clear buffer cho data lớn
                 
             except Exception as e:
                 logger.error(f"Transmission error from {tx_port}: {e}")
