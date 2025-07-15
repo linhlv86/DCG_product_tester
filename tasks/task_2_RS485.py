@@ -181,6 +181,13 @@ def test_rs485_at_baud(baud_rate):
                                         logger.warning(f"  Expected preview: {test_data[:50]}")
                                         logger.warning(f"  Received preview: {data[:50]}")
                                     failed_ports.append(f"{rx_port}(got:{len(data)}bytes)")
+                                    # Ghi ra detail đoạn data lỗi
+                                    results.append({
+                                        "item": f"RS485 RX from {rx_port} at {baud_rate} baud (100 bytes)",
+                                        "result": "FAIL",
+                                        "detail": f"Expected: {test_data[:50]}...\nReceived: {data[:50]}...",
+                                        "passed": False
+                                    })
                                 else:
                                     logger.warning(f"✗ {rx_port} received no data")
                                     failed_ports.append(f"{rx_port}(got:nothing)")
