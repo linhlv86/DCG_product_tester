@@ -177,6 +177,9 @@ def test_rs485_at_baud(baud_rate):
                                 if data:
                                     # Tìm vị trí đầu tiên bị sai
                                     diff_index = next((i for i in range(min(len(data), len(test_data))) if data[i] != test_data[i]), None)
+                                    # Tính số byte sai biệt
+                                    diff_count = sum(1 for i in range(min(len(data), len(test_data))) if data[i] != test_data[i])
+                                    diff_percent = round(100 * diff_count / len(test_data), 2) if len(test_data) > 0 else 0
                                     if diff_index is not None:
                                         start = max(0, diff_index - 10)
                                         end = min(len(test_data), diff_index + 10)
@@ -185,11 +188,15 @@ def test_rs485_at_baud(baud_rate):
                                         detail_msg = (
                                             f"Diff at byte {diff_index}:\n"
                                             f"Expected: {expected_snippet}\n"
-                                            f"Received: {received_snippet}"
+                                            f"Received: {received_snippet}\n"
+                                            f"Diff bytes: {diff_count}/{len(test_data)} ({diff_percent}%)"
                                         )
                                     else:
-                                        detail_msg = f"Data length mismatch or error. Expected: {len(test_data)}, Received: {len(data)}"
-                                    logger.warning(f"✗ {rx_port} received wrong data at byte {diff_index}")
+                                        detail_msg = (
+                                            f"Data length mismatch or error. Expected: {len(test_data)}, Received: {len(data)}\n"
+                                            f"Diff bytes: {diff_count}/{len(test_data)} ({diff_percent}%)"
+                                        )
+                                    logger.warning(f"✗ {rx_port} received wrong data at byte {diff_index}, diff {diff_percent}%")
                                     failed_ports.append(f"{rx_port}(got:{len(data)}bytes)")
                                     results.append({
                                         "item": f"RS485 RX from {rx_port} at {baud_rate} baud (100 bytes)",
