@@ -24,11 +24,25 @@ BAUD_DELAY = [1, 0.5, 0.2, 0.2]  # Delay after sending data for each baud rate
 global_message = []
 
 def set_gpio_mode(gpio_pin, mode):
-    """Set GPIO mode: 1 for RS422, 0 for RS485"""
+    """
+    Ghi giá trị mode vào GPIO thực tế.
+    mode: 0 (RS485), 1 (RS422)
+    """
     try:
-        logger.info(f"Setting GPIO {gpio_pin} to mode {mode} (0=RS485, 1=RS422)")
-        print(f"Setting GPIO {gpio_pin} to mode {mode} (0=RS485, 1=RS422)")
-        time.sleep(0.1)  # Small delay for GPIO setting
+        # Export GPIO nếu chưa export
+        gpio_path = f"/sys/class/gpio/gpio{gpio_pin}"
+        if not os.path.exists(gpio_path):
+            with open("/sys/class/gpio/export", "w") as f:
+                f.write(str(gpio_pin))
+            time.sleep(0.05)
+        # Set direction out
+        with open(f"{gpio_path}/direction", "w") as f:
+            f.write("out")
+        # Ghi giá trị mode
+        with open(f"{gpio_path}/value", "w") as f:
+            f.write(str(mode))
+        time.sleep(0.05)
+        logger.info(f"GPIO {gpio_pin} set to {mode} (0=RS485, 1=RS422)")
         return True, ""
     except Exception as e:
         logger.error(f"GPIO setting failed: {e}")
