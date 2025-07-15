@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Mô tả của task này, sẽ hiển thị trên giao diện người dùng
-DESCRIPTION = "RS485 Communication Test"
+DESCRIPTION = "RS485 Communication Test:the quick brown fox jumped over the lazy dog"
 
 # Configuration constants
 GPIO_MODE = [129, 135, 122, 127]
@@ -108,19 +108,31 @@ def test_rs485_at_baud(baud_rate):
             ser.reset_input_buffer()
             ser.reset_output_buffer()
         
-        time.sleep(0.2)  # Wait for buffers to clear
+        time.sleep(0.5)  # Tăng delay để đảm bảo buffers clear hoàn toàn
         
         # Test each port as transmitter
         for tx_index, tx_port in enumerate(SERIAL_PORTS):
             logger.info(f"Testing transmission from {tx_port}")
             test_data = f"TEST_RS485_{tx_index}_{baud_rate}".encode('utf-8')
             
+            # Delay giữa các test để tránh xung đột
+            if tx_index > 0:
+                logger.info(f"Waiting before test {tx_index + 1}...")
+                time.sleep(1.0)  # Delay 1 giây giữa các lần test
+            
             try:
+                # Clear buffers trước khi test
+                for ser in serial_connections.values():
+                    ser.reset_input_buffer()
+                    ser.reset_output_buffer()
+                
+                time.sleep(0.2)  # Delay sau khi clear buffer
+                
                 # Send test data from transmitter
                 logger.info(f"Sending data: {test_data}")
                 serial_connections[tx_port].write(test_data)
                 serial_connections[tx_port].flush()
-                time.sleep(0.3)  # Wait for transmission
+                time.sleep(0.5)  # Tăng delay để đảm bảo transmission hoàn tất
                 
                 # Check if other ports received the data
                 received_count = 0
@@ -164,12 +176,12 @@ def test_rs485_at_baud(baud_rate):
                     })
                     logger.warning(f"✗ {tx_port} test failed: {received_count}/{expected_receivers} received")
                 
-                # Clear buffers after each test
+                # Clear buffers sau mỗi test
                 for ser in serial_connections.values():
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
                 
-                time.sleep(0.1)
+                time.sleep(0.3)  # Delay sau khi clear buffer
                 
             except Exception as e:
                 logger.error(f"Transmission error from {tx_port}: {e}")
@@ -214,7 +226,12 @@ def test_task():
         
         # Test RS485 communication for each baud rate
         logger.info("Step 2: Testing RS485 communication at different baud rates")
-        for baud_rate in BAUD_RATES:
+        for baud_index, baud_rate in enumerate(BAUD_RATES):
+            # Delay giữa các baud rate tests
+            if baud_index > 0:
+                logger.info(f"Waiting before testing baud rate {baud_rate}...")
+                time.sleep(2.0)  # Delay 2 giây giữa các baud rate
+            
             logger.info(f"Testing at {baud_rate} baud...")
             global_message.append(f"--- Testing at {baud_rate} baud ---")
             
