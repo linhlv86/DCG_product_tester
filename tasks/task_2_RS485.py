@@ -153,7 +153,7 @@ def test_rs485_at_baud(baud_rate):
             serial_connections[tx_port].flush()
             time.sleep(baud_delay)
 
-            # Đọc dữ liệu ở RX
+            # Chỉ kiểm tra data ở RX tương ứng
             try:
                 data = serial_connections[rx_port].read_all()
                 logger.info(f"Port {rx_port} received: {len(data)} bytes")
