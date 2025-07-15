@@ -132,9 +132,9 @@ def test_rs485_at_baud(baud_rate):
                 logger.info(f"Sending data: {test_data}")
                 serial_connections[tx_port].write(test_data)
                 serial_connections[tx_port].flush()
-                
-                time.sleep(0.1)  # Delay 0.1s sau khi truyền, trước khi đọc
-                
+
+                time.sleep(1)  # Delay 1 giây sau khi truyền, trước khi đọc
+
                 # Check if other ports received the data
                 received_count = 0
                 failed_ports = []
