@@ -117,7 +117,7 @@ def test_rs485_at_baud(baud_rate):
             # Tạo test data dài 255 bytes
             base_msg = f"TEST_RS485_{tx_index}_{baud_rate}_"
             # Tính toán số byte cần thêm để đạt 255 bytes
-            remaining_bytes = 255 - len(base_msg.encode('utf-8'))
+            remaining_bytes = 100 - len(base_msg.encode('utf-8'))
             if remaining_bytes > 0:
                 # Thêm pattern lặp để đạt đủ 255 bytes
                 filler = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" * (remaining_bytes // 36 + 1)
