@@ -126,13 +126,14 @@ def test_rs485_at_baud(baud_rate):
                     ser.reset_input_buffer()
                     ser.reset_output_buffer()
                 
-                time.sleep(0.2)  # Delay sau khi clear buffer
+                time.sleep(0.5)  # Delay 0.5s sau khi clear buffer
                 
                 # Send test data from transmitter
                 logger.info(f"Sending data: {test_data}")
                 serial_connections[tx_port].write(test_data)
                 serial_connections[tx_port].flush()
-                time.sleep(0.5)  # Tăng delay để đảm bảo transmission hoàn tất
+                
+                time.sleep(0.1)  # Delay 0.1s sau khi truyền, trước khi đọc
                 
                 # Check if other ports received the data
                 received_count = 0
