@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Mô tả của task này, sẽ hiển thị trên giao diện người dùng
-DESCRIPTION = "RS485 Communication Test"
+DESCRIPTION = "RS422 Communication Test"
 
 # Configuration constants
 GPIO_MODE = [129, 135, 122, 127]
@@ -78,9 +78,9 @@ def check_serial_ports_exist():
 def calc_baud_delay(byte_count, baudrate):
     return byte_count * 10 / baudrate + 0.1
 
-def test_rs485_at_baud(baud_rate):
-    """Test RS485 communication at specific baud rate"""
-    logger.info(f"Starting RS485 test at {baud_rate} baud")
+def test_rs422_at_baud(baud_rate):
+    """Test RS422 communication at specific baud rate"""
+    logger.info(f"Starting RS422 test at {baud_rate} baud")
     results = []
     serial_connections = {}
     try:
@@ -103,10 +103,10 @@ def test_rs485_at_baud(baud_rate):
     try:
         baud_delay = calc_baud_delay(TEST_DATA_LEN, baud_rate)
 
-        # Set all GPIO modes to 0 (RS485 mode)
-        logger.info("Setting GPIO modes to RS485...")
+        # Set all GPIO modes to 0 (RS422 mode)
+        logger.info("Setting GPIO modes to RS422...")
         for i, gpio_pin in enumerate(GPIO_MODE):
-            set_gpio_mode(gpio_pin, 0)
+            set_gpio_mode(gpio_pin, 1)
 
         # Clear all serial buffers
         for ser in serial_connections.values():
@@ -126,7 +126,7 @@ def test_rs485_at_baud(baud_rate):
             logger.info(f"Testing TX {tx_port} -> RX {rx_port}")
 
             # Tạo test data dài TEST_DATA_LEN bytes
-            base_msg = f"TEST_RS485_{tx_port}_to_{rx_port}_{baud_rate}_"
+            base_msg = f"TEST_RS422_{tx_port}_to_{rx_port}_{baud_rate}_"
             remaining_bytes = TEST_DATA_LEN - len(base_msg.encode('utf-8'))
             if remaining_bytes > 0:
                 filler = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" * (remaining_bytes // 36 + 1)
@@ -183,7 +183,7 @@ def test_rs485_at_baud(baud_rate):
                             f"Diff bytes: {diff_count}/{len(test_data)} ({diff_percent}%)"
                         )
                     results.append({
-                        "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
+                        "item": f"RS422 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
                         "result": "FAIL",
                         "detail": detail_msg,
                         "passed": False
@@ -191,7 +191,7 @@ def test_rs485_at_baud(baud_rate):
                     logger.warning(f"✗ {tx_port} -> {rx_port} received wrong data at byte {diff_index}, diff {diff_percent}%")
             except Exception as e:
                 results.append({
-                    "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
+                    "item": f"RS422 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
                     "result": "FAIL",
                     "detail": f"Error reading from {rx_port}: {str(e)}",
                     "passed": False
@@ -213,11 +213,11 @@ def test_rs485_at_baud(baud_rate):
             except Exception as e:
                 logger.error(f"Error closing {port}: {e}")
 
-    logger.info(f"Completed RS485 test at {baud_rate} baud")
+    logger.info(f"Completed RS422 test at {baud_rate} baud")
     return results
 
 def test_task():
-    logger.info("=== Starting RS485 Communication Test ===")
+    logger.info("=== Starting RS422 Communication Test ===")
     detail_results = []
     global global_message
     global_message = []  # Reset global message
@@ -235,8 +235,8 @@ def test_task():
             message = port_check["detail"] + f"\nSummary: 0 PASS, 1 FAIL."
             return status, message, detail_results
         
-        # Test RS485 communication for each baud rate
-        logger.info("Step 2: Testing RS485 communication at different baud rates")
+        # Test RS422 communication for each baud rate
+        logger.info("Step 2: Testing RS422 communication at different baud rates")
         for baud_index, baud_rate in enumerate(BAUD_RATES):
             # Delay giữa các baud rate tests
             if baud_index > 0:
@@ -246,7 +246,7 @@ def test_task():
             logger.info(f"Testing at {baud_rate} baud...")
             global_message.append(f"--- Testing at {baud_rate} baud ---")
             
-            baud_results = test_rs485_at_baud(baud_rate)
+            baud_results = test_rs422_at_baud(baud_rate)
             detail_results.extend(baud_results)
             
             # Count pass/fail for this baud rate
@@ -262,7 +262,7 @@ def test_task():
         status = "Passed" if all_pass else "Failed"
         message = "\n".join(global_message) + f"\nSummary: {num_pass} PASS, {num_fail} FAIL."
 
-        logger.info(f"=== RS485 Test Completed: {status} ===")
+        logger.info(f"=== RS422 Test Completed: {status} ===")
         logger.info(f"Summary: {num_pass} PASS, {num_fail} FAIL")
 
         return status, message, detail_results
