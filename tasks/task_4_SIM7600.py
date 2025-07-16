@@ -242,6 +242,7 @@ def test_task():
             "detail": f"SIM1 ICCID: {iccid1}\nSIM2 ICCID: {iccid2}\nICCID not different or missing.",
             "passed": False
         })
+        
     detail_results.extend(compare_result)
 
     # Power off module cuối cùng
