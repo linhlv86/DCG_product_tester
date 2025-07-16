@@ -11,7 +11,7 @@ import threading
 import time
 import subprocess
 import os
-import sys
+import signal
 
 # Bỏ hết tác vụ GPIO
 # Xóa toàn bộ phần import, biến, hàm và thread liên quan đến GPIO
@@ -57,7 +57,21 @@ def auto_git_pull(interval=10):
             print(f"Git error: {e}")
         time.sleep(interval)
 
+def kill_old_gpio_blink():
+    try:
+        result = subprocess.run(
+            ["pgrep", "-f", "gpio_test.py"],
+            capture_output=True, text=True
+        )
+        pids = result.stdout.strip().split('\n')
+        for pid in pids:
+            if pid and pid.isdigit():
+                os.kill(int(pid), signal.SIGKILL)
+    except Exception as e:
+        print(f"Error killing old gpio_test.py: {e}")
+
 def start_gpio_blink_process():
+    kill_old_gpio_blink()
     script_path = "/home/orangepi/product_tester/DCG_product_tester/tasks/bash/gpio_test.py"
     try:
         proc = subprocess.Popen(["python3", script_path])
@@ -72,6 +86,7 @@ start_gpio_blink_process()
 # Khởi động thread auto pull khi chạy main.py
 if __name__ == "__main__":
     threading.Thread(target=send_udp_broadcast, daemon=True).start()
+    subprocess.run(["pkill", "-f", "gpio_test.py"])
     start_gpio_blink_process()
     threading.Thread(target=auto_git_pull, daemon=True).start()
     print("Starting Flask-SocketIO server...")

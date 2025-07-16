@@ -1,23 +1,5 @@
 import subprocess
 import time
-import os
-import signal
-
-# Kill các tiến trình gpio_test.py cũ (trừ chính mình)
-def kill_old_gpio_test():
-    try:
-        result = subprocess.run(
-            ["pgrep", "-f", "gpio_test.py"],
-            capture_output=True, text=True
-        )
-        pids = result.stdout.strip().split('\n')
-        for pid in pids:
-            if pid and int(pid) != os.getpid():
-                os.kill(int(pid), signal.SIGKILL)
-    except Exception as e:
-        print(f"Error killing old gpio_test.py: {e}")
-
-kill_old_gpio_test()
 
 GP_IOSET = "/usr/bin/gpioset"
 
