@@ -22,7 +22,7 @@ SERIAL_PORTS = [f"/dev/ttyACM{i}" for i in range(4)]
 BAUD_RATES = [1200, 9600, 38400, 115200]
 global_message = []
 
-TEST_DATA_LEN = 2000  # Số byte test, dễ dàng thay đổi
+TEST_DATA_LEN = 1024  # Số byte test, dễ dàng thay đổi
 
 def set_gpio_mode(gpio_pin, mode):
     """
