@@ -103,17 +103,6 @@ def test_rs422_at_baud(baud_rate):
     try:
         baud_delay = calc_baud_delay(TEST_DATA_LEN, baud_rate)
 
-        # Set all GPIO modes to 0 (RS422 mode)
-        logger.info("Setting GPIO modes to RS422...")
-        for i, gpio_pin in enumerate(GPIO_MODE):
-            set_gpio_mode(gpio_pin, 1)
-
-        # Clear all serial buffers
-        for ser in serial_connections.values():
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-        time.sleep(0.2)
-
         # Định nghĩa các cặp kiểm tra chéo
         port_pairs = [
             (SERIAL_PORTS[0], SERIAL_PORTS[1]),
@@ -180,14 +169,15 @@ def test_rs422_at_baud(baud_rate):
                         expected_snippet = test_data[start:end]
                         received_snippet = data[start:end]
                         detail_msg = (
-                            f"Diff at byte {diff_index}:\n"
+                            f"[RS422 RX ERROR] Diff at byte {diff_index} (TX:{tx_port}, RX:{rx_port}, baud:{baud_rate}):\n"
                             f"Expected: {expected_snippet}\n"
                             f"Received: {received_snippet}\n"
                             f"Diff bytes: {diff_count}/{len(test_data)} ({diff_percent}%)"
                         )
                     else:
                         detail_msg = (
-                            f"Data length mismatch or error. Expected: {len(test_data)}, Received: {len(data)}\n"
+                            f"[RS422 RX ERROR] Data length mismatch or error (TX:{tx_port}, RX:{rx_port}, baud:{baud_rate}). "
+                            f"Expected: {len(test_data)}, Received: {len(data)}\n"
                             f"Diff bytes: {diff_count}/{len(test_data)} ({diff_percent}%)"
                         )
                     results.append({
@@ -196,15 +186,16 @@ def test_rs422_at_baud(baud_rate):
                         "detail": detail_msg,
                         "passed": False
                     })
-                    logger.warning(f"✗ {tx_port} -> {rx_port} received wrong data at byte {diff_index}, diff {diff_percent}%")
+                    logger.warning(f"[RS422 RX ERROR] {tx_port}->{rx_port} at {baud_rate} baud: {detail_msg}")
             except Exception as e:
+                detail_msg = f"[RS422 RX EXCEPTION] TX:{tx_port}, RX:{rx_port}, baud:{baud_rate}: {str(e)}"
                 results.append({
                     "item": f"RS422 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
                     "result": "FAIL",
-                    "detail": f"Error reading from {rx_port}: {str(e)}",
+                    "detail": detail_msg,
                     "passed": False
                 })
-                logger.error(f"Error reading from {rx_port}: {e}")
+                logger.error(detail_msg)
 
             # Clear buffers sau mỗi test
             for ser in serial_connections.values():

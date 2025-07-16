@@ -172,7 +172,7 @@ def test_rs485_at_baud(baud_rate):
                         expected_snippet = test_data[start:end]
                         received_snippet = data[start:end]
                         detail_msg = (
-                            f"Diff at byte {diff_index}:\n"
+                            f"[RS485 RX ERROR] Diff at byte {diff_index} (TX:{tx_port}, RX:{rx_port}, baud:{baud_rate}):\n"
                             f"Expected: {expected_snippet}\n"
                             f"Received: {received_snippet}\n"
                             f"Diff bytes: {diff_count}/{len(test_data)} ({diff_percent}%)"
@@ -193,10 +193,10 @@ def test_rs485_at_baud(baud_rate):
                 results.append({
                     "item": f"RS485 {tx_port} -> {rx_port} at {baud_rate} baud ({TEST_DATA_LEN} bytes)",
                     "result": "FAIL",
-                    "detail": f"Error reading from {rx_port}: {str(e)}",
+                    "detail": detail_msg,
                     "passed": False
                 })
-                logger.error(f"Error reading from {rx_port}: {e}")
+                logger.error(detail_msg)
 
             # Clear buffers sau mỗi test
             for ser in serial_connections.values():
