@@ -125,6 +125,14 @@ def test_rs422_at_baud(baud_rate):
         for tx_port, rx_port in port_pairs:
             logger.info(f"Testing TX {tx_port} -> RX {rx_port}")
 
+            # Xác định index của TX và RX trong SERIAL_PORTS
+            tx_idx = SERIAL_PORTS.index(tx_port)
+            rx_idx = SERIAL_PORTS.index(rx_port)
+
+            # Set GPIO TX lên 1 (RS422), RX về 0 (RS485)
+            set_gpio_mode(GPIO_MODE[tx_idx], 1)
+            set_gpio_mode(GPIO_MODE[rx_idx], 0)
+
             # Tạo test data dài TEST_DATA_LEN bytes
             base_msg = f"TEST_RS422_{tx_port}_to_{rx_port}_{baud_rate}_"
             remaining_bytes = TEST_DATA_LEN - len(base_msg.encode('utf-8'))
