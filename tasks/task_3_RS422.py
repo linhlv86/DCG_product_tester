@@ -212,6 +212,11 @@ def test_rs422_at_baud(baud_rate):
             except Exception as e:
                 logger.error(f"Error closing {port}: {e}")
 
+        # Đưa tất cả các chân GPIO về mode 0 (RS485) sau khi test xong
+        logger.info("Resetting all GPIO modes to 0 (RS485) after RS422 test...")
+        for gpio_pin in GPIO_MODE:
+            set_gpio_mode(gpio_pin, 0)
+
     logger.info(f"Completed RS422 test at {baud_rate} baud")
     return results
 
