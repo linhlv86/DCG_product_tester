@@ -105,6 +105,18 @@ def sim7602_chat(port, chat_script, timeout=2):
         })
     return results
 
+def wait_for_ports(ports, timeout=10, interval=0.2):
+    logger.info(f"Waiting for ports: {ports}")
+    start = time.time()
+    while time.time() - start < timeout:
+        found = [port for port in ports if os.path.exists(port)]
+        if len(found) == len(ports):
+            logger.info(f"All ports found: {found}")
+            return True
+        time.sleep(interval)
+    logger.warning(f"Timeout waiting for ports: {ports}. Found: {found}")
+    return False
+
 def test_task():
     logger.info("=== Starting SIM7602 Module Test ===")
     detail_results = []
@@ -117,7 +129,16 @@ def test_task():
     sim1_ok, msgSIM1 = set_gpio(GPIO_SIMSEL, 0)
     # Power ON module
     power_ok, msgPower = set_gpio(GPIO_POWER, 1)
-    time.sleep(10)  # Đợi module khởi động xong
+    # Thay thế time.sleep(10) bằng hàm chờ cổng
+    if not wait_for_ports(SIM_SERIAL_PORTS, timeout=10, interval=0.2):
+        logger.error("Timeout waiting for SIM7602 ports")
+        detail_results.append({
+            "item": "Start SIM7602 with SIM card 1",
+            "result": "FAIL",
+            "detail": "Timeout waiting for SIM7602 ports",
+            "passed": False
+        })
+        return "Failed", "Timeout waiting for SIM7602 ports", detail_results
 
     detail_results.append({
         "item": "Start SIM7602 with SIM card 1",
@@ -182,7 +203,15 @@ def test_task():
     sim2_ok, msgSIM2 = set_gpio(GPIO_SIMSEL, 1)
     # Power ON module lại
     power_ok2, msgPower2 = set_gpio(GPIO_POWER, 1)
-    time.sleep(3)
+    if not wait_for_ports(SIM_SERIAL_PORTS, timeout=10, interval=0.2):
+        logger.error("Timeout waiting for SIM7602 ports after switching to SIM2")
+        detail_results.append({
+            "item": "Switch to SIM card 2",
+            "result": "FAIL",
+            "detail": "Timeout waiting for SIM7602 ports after switching to SIM2",
+            "passed": False
+        })
+        return "Failed", "Timeout waiting for SIM7602 ports after switching to SIM2", detail_results
 
     detail_results.append({
         "item": "Switch to SIM card 2 and power ON",
