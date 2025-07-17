@@ -3,6 +3,7 @@ import subprocess
 import os
 import serial
 import logging
+import glob
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,9 +37,10 @@ def set_gpio(gpio_pin, value):
 
 def check_sim_ports_exist():
     logger.info("Checking SIM7602 serial ports...")
+    found_ports = glob.glob("/dev/ttyUSB*")
     missing_ports = []
     for port in SIM_SERIAL_PORTS:
-        if not os.path.exists(port):
+        if port not in found_ports:
             missing_ports.append(port)
             logger.warning(f"Missing port: {port}")
         else:
@@ -147,23 +149,23 @@ def test_task():
                 iccid1 = line.strip().split(":")[-1].strip()
         if iccid1:
             iccid_result1.append({
-                "item": "SIM7602 AT+CICCID SIM1",
+                "item": "SIM1 CICCID",
                 "result": "PASS",
                 "detail": f"AT+CICCID\n{line.strip()}",
                 "passed": True
             })
         else:
             iccid_result1.append({
-                "item": "SIM7602 AT+CICCID SIM1",
+                "item": " SIM1 CICCID",
                 "result": "FAIL",
                 "detail": f"No ICCID info: {response.strip()}",
                 "passed": False
             })
         ser.close()
     except Exception as e:
-        logger.error(f"SIM7602 ICCID SIM1 error: {e}")
+        logger.error(f"ICCID SIM1 error: {e}")
         iccid_result1.append({
-            "item": "SIM7602 AT+CICCID SIM1",
+            "item": "SIM1 CICCID",
             "result": "FAIL",
             "detail": f"Serial error: {str(e)}",
             "passed": False
@@ -203,14 +205,14 @@ def test_task():
                 iccid2 = line.strip().split(":")[-1].strip()
         if iccid2:
             iccid_result2.append({
-                "item": "SIM7602 AT+CICCID SIM2",
+                "item": "SIM2 CICCID",
                 "result": "PASS",
                 "detail": f"AT+CICCID\n{line.strip()}",
                 "passed": True
             })
         else:
             iccid_result2.append({
-                "item": "SIM7602 AT+CICCID SIM2",
+                "item": "SIM2 CICCID",
                 "result": "FAIL",
                 "detail": f"No ICCID info: {response.strip()}",
                 "passed": False
@@ -219,9 +221,9 @@ def test_task():
     except Exception as e:
         logger.error(f"SIM7602 ICCID SIM2 error: {e}")
         iccid_result2.append({
-            "item": "SIM7602 AT+CICCID SIM2",
+            "item": "SIM2 CICCID ",
             "result": "FAIL",
-            "detail": f"Serial error: {str(e)}",
+            "detail": f"Error: {str(e)}",
             "passed": False
         })
     detail_results.extend(iccid_result2)
@@ -230,7 +232,7 @@ def test_task():
     compare_result = []
     if iccid1 and iccid2 and iccid1 != iccid2:
         compare_result.append({
-            "item": "Compare ICCID SIM1 vs SIM2",
+            "item": "Switch SIM1 to SIM2",
             "result": "PASS",
             "detail": f"SIM1 ICCID: {iccid1}\nSIM2 ICCID: {iccid2}",
             "passed": True
@@ -239,7 +241,7 @@ def test_task():
         compare_result.append({
             "item": "Compare ICCID SIM1 vs SIM2",
             "result": "FAIL",
-            "detail": f"SIM1 ICCID: {iccid1}\nSIM2 ICCID: {iccid2}\nICCID not different or missing.",
+            "detail": f"SIM1 ICCID: {iccid1}\nSIM2 ICCID: {iccid2}\nICCID can not switch SIM card normaly  .",
             "passed": False
         })
         
