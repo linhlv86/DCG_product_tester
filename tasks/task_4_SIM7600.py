@@ -117,7 +117,7 @@ def test_task():
     sim1_ok, msgSIM1 = set_gpio(GPIO_SIMSEL, 0)
     # Power ON module
     power_ok, msgPower = set_gpio(GPIO_POWER, 1)
-    time.sleep(3)  # Đợi module khởi động xong
+    time.sleep(5)  # Đợi module khởi động xong
 
     detail_results.append({
         "item": "Start SIM7602 with SIM card 1",
