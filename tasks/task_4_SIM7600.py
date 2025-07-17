@@ -156,6 +156,41 @@ def test_task():
         message = port_check["detail"] + f"\nSummary: 0 PASS, 1 FAIL."
         return status, message, detail_results
 
+    # Kiểm tra AT+CPIN? trước khi đọc ICCID SIM1
+    cpin_result1 = []
+    try:
+        ser = serial.Serial(SIM_AT_PORT, 115200, timeout=2)
+        time.sleep(0.5)
+        ser.write(b"AT+CPIN?\r")
+        ser.flush()
+        time.sleep(0.5)
+        response = ser.read_all().decode(errors="ignore")
+        logger.info(f"SIM1 AT+CPIN? Response: {response.strip()}")
+        if "READY" in response:
+            cpin_result1.append({
+                "item": "SIM1 AT+CPIN?",
+                "result": "PASS",
+                "detail": response.strip(),
+                "passed": True
+            })
+        else:
+            cpin_result1.append({
+                "item": "SIM1 AT+CPIN?",
+                "result": "FAIL",
+                "detail": response.strip(),
+                "passed": False
+            })
+        ser.close()
+    except Exception as e:
+        logger.error(f"SIM1 AT+CPIN? error: {e}")
+        cpin_result1.append({
+            "item": "SIM1 AT+CPIN?",
+            "result": "FAIL",
+            "detail": f"Serial error: {str(e)}",
+            "passed": False
+        })
+    detail_results.extend(cpin_result1)
+
     # Đọc ICCID SIM1
     iccid1 = ""
     iccid_result1 = []
@@ -219,6 +254,41 @@ def test_task():
         "detail": f"Power: {msgPower2}, SIM2: {msgSIM2}" if not (power_ok2 and sim2_ok) else "Power ON & SIM2 OK",
         "passed": power_ok2 and sim2_ok
     })
+
+    # Kiểm tra AT+CPIN? trước khi đọc ICCID SIM2
+    cpin_result2 = []
+    try:
+        ser = serial.Serial(SIM_AT_PORT, 115200, timeout=2)
+        time.sleep(0.5)
+        ser.write(b"AT+CPIN?\r")
+        ser.flush()
+        time.sleep(0.5)
+        response = ser.read_all().decode(errors="ignore")
+        logger.info(f"SIM2 AT+CPIN? Response: {response.strip()}")
+        if "READY" in response:
+            cpin_result2.append({
+                "item": "SIM2 AT+CPIN?",
+                "result": "PASS",
+                "detail": response.strip(),
+                "passed": True
+            })
+        else:
+            cpin_result2.append({
+                "item": "SIM2 AT+CPIN?",
+                "result": "FAIL",
+                "detail": response.strip(),
+                "passed": False
+            })
+        ser.close()
+    except Exception as e:
+        logger.error(f"SIM2 AT+CPIN? error: {e}")
+        cpin_result2.append({
+            "item": "SIM2 AT+CPIN?",
+            "result": "FAIL",
+            "detail": f"Serial error: {str(e)}",
+            "passed": False
+        })
+    detail_results.extend(cpin_result2)
 
     # Đọc ICCID SIM2
     iccid2 = ""
