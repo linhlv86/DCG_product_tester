@@ -121,235 +121,201 @@ def test_task():
     logger.info("=== Starting SIM7602 Module Test ===")
     detail_results = []
 
-    # Power off module trước khi bắt đầu
-    set_gpio(GPIO_POWER, 0)
-    time.sleep(1)
-
-    # Chọn SIM1
-    sim1_ok, msgSIM1 = set_gpio(GPIO_SIMSEL, 0)
-    # Power ON module
-    power_ok, msgPower = set_gpio(GPIO_POWER, 1)
-    # Thay thế time.sleep(10) bằng hàm chờ cổng
+    # 1. Khởi động module
+    set_gpio(GPIO_POWER, 1)
+    logger.info("Power ON SIM7602 module")
     if not wait_for_ports(SIM_SERIAL_PORTS, timeout=10, interval=0.2):
-        logger.error("Timeout waiting for SIM7602 ports")
+        detail = "Timeout waiting for SIM7602 ports"
+        logger.error(detail)
         detail_results.append({
-            "item": "Start SIM7602 with SIM card 1",
+            "item": "Module startup",
             "result": "FAIL",
-            "detail": "Timeout waiting for SIM7602 ports",
+            "detail": detail,
             "passed": False
         })
-        return "Failed", "Timeout waiting for SIM7602 ports", detail_results
-
+        set_gpio(GPIO_POWER, 0)
+        return "Failed", detail, detail_results
     detail_results.append({
-        "item": "Start SIM7602 with SIM card 1",
-        "result": "PASS" if (power_ok and sim1_ok) else "FAIL",
-        "detail": f"Power: {msgPower}, SIM1: {msgSIM1}" if not (power_ok and sim1_ok) else "Power ON & SIM1 OK",
-        "passed": power_ok and sim1_ok
+        "item": "Module startup",
+        "result": "PASS",
+        "detail": "SIM7602 ports detected",
+        "passed": True
     })
 
-    # Kiểm tra serial ports
-    port_check = check_sim_ports_exist()
-    detail_results.append(port_check)
-    if not port_check["passed"]:
-        logger.error("SIM7602 serial ports check failed, aborting test")
-        status = "Failed"
-        message = port_check["detail"] + f"\nSummary: 0 PASS, 1 FAIL."
-        return status, message, detail_results
-
-    # Kiểm tra AT+CPIN? trước khi đọc ICCID SIM1
-    cpin_result1 = []
+    # 2. Kiểm tra SIM1
+    sim1_ok, msgSIM1 = set_gpio(GPIO_SIMSEL, 0)
+    logger.info("Select SIM1")
+    time.sleep(0.5)
+    ccid1 = ""
     try:
         ser = serial.Serial(SIM_AT_PORT, 115200, timeout=2)
         time.sleep(0.5)
+        # Gửi at+cfun=0
+        ser.write(b"AT+CFUN=0\r")
+        ser.flush()
+        time.sleep(1)
+        ser.read_all()
+        # Gửi AT+CGEREP=0,0
+        ser.write(b"AT+CGEREP=0,0\r")
+        ser.flush()
+        time.sleep(1)
+        ser.read_all()
+        # Chuyển sang SIM1 (đã set GPIO ở trên)
+        # Gửi at+cfun=1
+        ser.write(b"AT+CFUN=1\r")
+        ser.flush()
+        time.sleep(5)
+        ser.read_all()
+        # Kiểm tra AT+CPIN?
         ser.write(b"AT+CPIN?\r")
         ser.flush()
-        time.sleep(0.5)
+        time.sleep(1)
         response = ser.read_all().decode(errors="ignore")
         logger.info(f"SIM1 AT+CPIN? Response: {response.strip()}")
-        if "READY" in response:
-            cpin_result1.append({
+        if "READY" in response or "CPIN: READY" in response:
+            detail_results.append({
                 "item": "SIM1 AT+CPIN?",
                 "result": "PASS",
                 "detail": response.strip(),
                 "passed": True
             })
         else:
-            cpin_result1.append({
+            detail_results.append({
                 "item": "SIM1 AT+CPIN?",
                 "result": "FAIL",
                 "detail": response.strip(),
                 "passed": False
             })
-        ser.close()
-    except Exception as e:
-        logger.error(f"SIM1 AT+CPIN? error: {e}")
-        cpin_result1.append({
-            "item": "SIM1 AT+CPIN?",
-            "result": "FAIL",
-            "detail": f"Serial error: {str(e)}",
-            "passed": False
-        })
-    detail_results.extend(cpin_result1)
-
-    # Đọc ICCID SIM1
-    iccid1 = ""
-    iccid_result1 = []
-    try:
-        ser = serial.Serial(SIM_AT_PORT, 115200, timeout=2)
-        time.sleep(0.5)
+        # Đọc CCID SIM1
         ser.write(b"AT+CICCID\r")
         ser.flush()
-        time.sleep(0.5)
+        time.sleep(1)
         response = ser.read_all().decode(errors="ignore")
-        logger.info(f"SIM1 ICCID Response: {response.strip()}")
+        logger.info(f"SIM1 AT+CICCID Response: {response.strip()}")
         for line in response.splitlines():
             if "+ICCID:" in line or "ICCID:" in line:
-                iccid1 = line.strip().split(":")[-1].strip()
-        if iccid1:
-            iccid_result1.append({
-                "item": "SIM1 CICCID",
+                ccid1 = line.strip().split(":")[-1].strip()
+        if ccid1:
+            detail_results.append({
+                "item": "SIM1 CCID",
                 "result": "PASS",
-                "detail": f"AT+CICCID\n{line.strip()}",
+                "detail": ccid1,
                 "passed": True
             })
         else:
-            iccid_result1.append({
-                "item": " SIM1 CICCID",
+            detail_results.append({
+                "item": "SIM1 CCID",
                 "result": "FAIL",
-                "detail": f"No ICCID info: {response.strip()}",
+                "detail": response.strip(),
                 "passed": False
             })
         ser.close()
     except Exception as e:
-        logger.error(f"ICCID SIM1 error: {e}")
-        iccid_result1.append({
-            "item": "SIM1 CICCID",
-            "result": "FAIL",
-            "detail": f"Serial error: {str(e)}",
-            "passed": False
-        })
-    detail_results.extend(iccid_result1)
-
-    # Power off module
-    set_gpio(GPIO_POWER, 0)
-    time.sleep(1)
-
-    # Đổi sang SIM2
-    sim2_ok, msgSIM2 = set_gpio(GPIO_SIMSEL, 1)
-    # Power ON module lại
-    power_ok2, msgPower2 = set_gpio(GPIO_POWER, 1)
-    if not wait_for_ports(SIM_SERIAL_PORTS, timeout=10, interval=0.2):
-        logger.error("Timeout waiting for SIM7602 ports after switching to SIM2")
+        logger.error(f"SIM1 test error: {e}")
         detail_results.append({
-            "item": "Switch to SIM card 2",
+            "item": "SIM1 test",
             "result": "FAIL",
-            "detail": "Timeout waiting for SIM7602 ports after switching to SIM2",
+            "detail": str(e),
             "passed": False
         })
-        return "Failed", "Timeout waiting for SIM7602 ports after switching to SIM2", detail_results
 
-    detail_results.append({
-        "item": "Switch to SIM card 2 and power ON",
-        "result": "PASS" if (power_ok2 and sim2_ok) else "FAIL",
-        "detail": f"Power: {msgPower2}, SIM2: {msgSIM2}" if not (power_ok2 and sim2_ok) else "Power ON & SIM2 OK",
-        "passed": power_ok2 and sim2_ok
-    })
-
-    # Kiểm tra AT+CPIN? trước khi đọc ICCID SIM2
-    cpin_result2 = []
+    # 3. Kiểm tra SIM2
+    sim2_ok, msgSIM2 = set_gpio(GPIO_SIMSEL, 1)
+    logger.info("Select SIM2")
+    time.sleep(0.5)
+    ccid2 = ""
     try:
         ser = serial.Serial(SIM_AT_PORT, 115200, timeout=2)
         time.sleep(0.5)
+        # Gửi at+cfun=0
+        ser.write(b"AT+CFUN=0\r")
+        ser.flush()
+        time.sleep(1)
+        ser.read_all()
+        # Gửi AT+CGEREP=0,0
+        ser.write(b"AT+CGEREP=0,0\r")
+        ser.flush()
+        time.sleep(1)
+        ser.read_all()
+        # Chuyển sang SIM2 (đã set GPIO ở trên)
+        time.sleep(0.5)
+        # Gửi at+cfun=1
+        ser.write(b"AT+CFUN=1\r")
+        ser.flush()
+        time.sleep(5)
+        ser.read_all()
+        # Kiểm tra AT+CPIN?
         ser.write(b"AT+CPIN?\r")
         ser.flush()
-        time.sleep(0.5)
+        time.sleep(1)
         response = ser.read_all().decode(errors="ignore")
         logger.info(f"SIM2 AT+CPIN? Response: {response.strip()}")
-        if "READY" in response:
-            cpin_result2.append({
+        if "READY" in response or "CPIN: READY" in response:
+            detail_results.append({
                 "item": "SIM2 AT+CPIN?",
                 "result": "PASS",
                 "detail": response.strip(),
                 "passed": True
             })
         else:
-            cpin_result2.append({
+            detail_results.append({
                 "item": "SIM2 AT+CPIN?",
                 "result": "FAIL",
                 "detail": response.strip(),
                 "passed": False
             })
-        ser.close()
-    except Exception as e:
-        logger.error(f"SIM2 AT+CPIN? error: {e}")
-        cpin_result2.append({
-            "item": "SIM2 AT+CPIN?",
-            "result": "FAIL",
-            "detail": f"Serial error: {str(e)}",
-            "passed": False
-        })
-    detail_results.extend(cpin_result2)
-
-    # Đọc ICCID SIM2
-    iccid2 = ""
-    iccid_result2 = []
-    try:
-        ser = serial.Serial(SIM_AT_PORT, 115200, timeout=2)
-        time.sleep(0.5)
+        # Đọc CCID SIM2
         ser.write(b"AT+CICCID\r")
         ser.flush()
-        time.sleep(0.5)
+        time.sleep(1)
         response = ser.read_all().decode(errors="ignore")
-        logger.info(f"SIM2 ICCID Response: {response.strip()}")
+        logger.info(f"SIM2 AT+CICCID Response: {response.strip()}")
         for line in response.splitlines():
             if "+ICCID:" in line or "ICCID:" in line:
-                iccid2 = line.strip().split(":")[-1].strip()
-        if iccid2:
-            iccid_result2.append({
-                "item": "SIM2 CICCID",
+                ccid2 = line.strip().split(":")[-1].strip()
+        if ccid2:
+            detail_results.append({
+                "item": "SIM2 CCID",
                 "result": "PASS",
-                "detail": f"AT+CICCID\n{line.strip()}",
+                "detail": ccid2,
                 "passed": True
             })
         else:
-            iccid_result2.append({
-                "item": "SIM2 CICCID",
+            detail_results.append({
+                "item": "SIM2 CCID",
                 "result": "FAIL",
-                "detail": f"No ICCID info: {response.strip()}",
+                "detail": response.strip(),
                 "passed": False
             })
         ser.close()
     except Exception as e:
-        logger.error(f"SIM7602 ICCID SIM2 error: {e}")
-        iccid_result2.append({
-            "item": "SIM2 CICCID ",
+        logger.error(f"SIM2 test error: {e}")
+        detail_results.append({
+            "item": "SIM2 test",
             "result": "FAIL",
-            "detail": f"Error: {str(e)}",
+            "detail": str(e),
             "passed": False
         })
-    detail_results.extend(iccid_result2)
 
-    # So sánh ICCID SIM1 và SIM2
-    compare_result = []
-    if iccid1 and iccid2 and iccid1 != iccid2:
-        compare_result.append({
+    # 4. So sánh CCID
+    if ccid1 and ccid2 and ccid1 != ccid2:
+        detail_results.append({
             "item": "Switch SIM1 to SIM2",
             "result": "PASS",
-            "detail": f"SIM1 ICCID: {iccid1}\nSIM2 ICCID: {iccid2}",
+            "detail": f"SIM1 CCID: {ccid1}\nSIM2 CCID: {ccid2}",
             "passed": True
         })
     else:
-        compare_result.append({
-            "item": "Compare ICCID SIM1 vs SIM2",
+        detail_results.append({
+            "item": "Compare CCID SIM1 vs SIM2",
             "result": "FAIL",
-            "detail": f"SIM1 ICCID: {iccid1}\nSIM2 ICCID: {iccid2}\nICCID can not switch SIM card normaly  .",
+            "detail": f"SIM1 CCID: {ccid1}\nSIM2 CCID: {ccid2}\nCCID not switched or missing.",
             "passed": False
         })
-        
-    detail_results.extend(compare_result)
 
-    # Power off module cuối cùng
+    # 5. Trả các GPIO về giá trị ban đầu
     set_gpio(GPIO_POWER, 0)
+    set_gpio(GPIO_SIMSEL, 0)
 
     # Tổng kết
     num_pass = sum(1 for r in detail_results if r["passed"])
