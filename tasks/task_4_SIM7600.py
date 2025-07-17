@@ -37,9 +37,9 @@ def set_gpio(gpio_pin, value):
         return False, str(e)
 
 def check_sim_ports_exist():
-    logger.info("Checking SIM7602 serial ports with pyserial...")
-    all_ports = list(serial.tools.list_ports.comports())
-    found_ports = [port.device for port in all_ports if 'ttyUSB' in port.device]
+    logger.info("Checking SIM7602 serial ports with glob...")
+    found_ports = glob.glob("/dev/ttyUSB*")
+    logger.info(f"Found ports: {found_ports}")
     missing_ports = []
     for port in SIM_SERIAL_PORTS:
         if port not in found_ports:
