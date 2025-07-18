@@ -124,6 +124,15 @@ def test_task():
     # 1. Khởi động module
     set_gpio(GPIO_POWER, 1)
     logger.info("Power ON SIM7602 module")
+    time.sleep(2)  # Đợi module khởi động   
+    try:
+        subprocess.run(["modprobe", "option"], check=True)
+        with open("/sys/bus/usb-serial/drivers/option1/new_id", "w") as f:
+            f.write("1286 4e3c\n")
+        logger.info("modprobe option & new_id OK")
+    except Exception as e:
+        logger.error(f"modprobe/echo new_id error: {e}")
+
     if not wait_for_ports(SIM_SERIAL_PORTS, timeout=20, interval=0.2):
         detail = "Timeout waiting for SIM7602 ports"
         logger.error(detail)
