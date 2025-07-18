@@ -105,7 +105,7 @@ def sim7602_chat(port, chat_script, timeout=2):
         })
     return results
 
-def wait_for_ports(ports, timeout=10, interval=0.2):
+def wait_for_ports(ports, timeout=20, interval=0.2):
     logger.info(f"Waiting for ports: {ports}")
     start = time.time()
     while time.time() - start < timeout:
@@ -124,7 +124,7 @@ def test_task():
     # 1. Khởi động module
     set_gpio(GPIO_POWER, 1)
     logger.info("Power ON SIM7602 module")
-    if not wait_for_ports(SIM_SERIAL_PORTS, timeout=10, interval=0.2):
+    if not wait_for_ports(SIM_SERIAL_PORTS, timeout=20, interval=0.2):
         detail = "Timeout waiting for SIM7602 ports"
         logger.error(detail)
         detail_results.append({
