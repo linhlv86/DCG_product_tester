@@ -19,7 +19,7 @@ psutil==5.9.5
 RPi.GPIO==0.7.1
 
 # Alternative GPIO library for Orange Pi
-OrangePi.GPIO>=0.6.3
+OrangePi.GPIO==0.6.5
 
 # HTTP requests (if needed)
 requests==2.31.0
