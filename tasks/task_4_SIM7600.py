@@ -16,7 +16,7 @@ GPIO_POWER = 123
 GPIO_SIMSEL = 144
 
 # Serial ports expected for SIM7602
-SIM_SERIAL_PORTS = [f"/dev/ttyUSB{i}" for i in range(4)]
+SIM_SERIAL_PORTS = [f"/dev/ttyUSB{i}" for i in range(3)]
 SIM_AT_PORT = "/dev/ttyUSB1"
 
 def set_gpio(gpio_pin, value):
