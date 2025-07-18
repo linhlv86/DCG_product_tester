@@ -126,7 +126,7 @@ def test_task():
     logger.info("Power ON SIM7602 module")
     time.sleep(2)  # Đợi module khởi động   
     try:
-        subprocess.run(["modprobe", "option"], check=True)
+        subprocess.run(["/usr/sbin/modprobe", "option"], check=True)
         with open("/sys/bus/usb-serial/drivers/option1/new_id", "w") as f:
             f.write("1286 4e3c\n")
         logger.info("modprobe option & new_id OK")
