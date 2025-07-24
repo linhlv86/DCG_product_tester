@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 DESCRIPTION = "MCU Test"
 
-CO_MCU_SERIAL = "/dev/ttyS1"  # Thay bằng cổng thực tế
+CO_MCU_SERIAL = "/dev/ttyS1"  # Replace with actual port if needed
 
 def set_gpio(gpio_pin, value):
     GP_IOSET = "/usr/bin/gpioset"
@@ -31,43 +31,43 @@ def flash_comcu_firmware(bin_file, serial_port="/dev/ttyS3"):
     PWM_CHIP = "/sys/class/pwm/pwmchip1"
     PWM = f"{PWM_CHIP}/pwm0"
 
-    # Kiểm tra file firmware
+    # Check firmware file
     if not bin_file or not os.path.isfile(bin_file):
         logger.error(f"Error: FW file not found: {bin_file}")
         return False, "File not found"
 
     try:
-        # Export PWM nếu chưa tồn tại
+        # Export PWM if not exists
         if not os.path.isdir(PWM):
             subprocess.run(["/usr/bin/bash", "-c", f"echo 0 > {PWM_CHIP}/export"], check=True)
-        # Thiết lập period và duty cycle
+        # Set period and duty cycle
         subprocess.run(["/usr/bin/bash", "-c", f"echo 10000 > {PWM}/period"], check=True)
         subprocess.run(["/usr/bin/bash", "-c", f"echo 5000 > {PWM}/duty_cycle"], check=True)
-        # Bật PWM
+        # Enable PWM
         subprocess.run(["/usr/bin/bash", "-c", f"echo 1 > {PWM}/enable"], check=True)
         time.sleep(1)
-        # Tắt PWM
+        # Disable PWM
         subprocess.run(["/usr/bin/bash", "-c", f"echo 0 > {PWM}/enable"], check=True)
         # Unexport PWM
         subprocess.run(["/usr/bin/bash", "-c", f"echo 0 > {PWM_CHIP}/unexport"], check=True)
         time.sleep(3)
-        # Nạp firmware qua UART
+        # Flash firmware via UART
         cmd = ["/usr/bin/stm32flash", "-w", bin_file, "-v", "-g", "0x0", serial_port]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            logger.error(f"Lỗi nạp FW: {result.stderr}")
+            logger.error(f"Firmware flashing failed: {result.stderr}")
             return False, result.stderr
-        logger.info("Nạp FW thành công")
-        return True, "Nạp FW thành công"
+        logger.info("Firmware flashing successful")
+        return True, "Firmware flashing successful"
     except Exception as e:
-        logger.error(f"Lỗi khi nạp FW: {e}")
+        logger.error(f"Error while flashing firmware: {e}")
         return False, str(e)
 
 def test_task():
     logger.info("=== Starting MCU Test ===")
     detail_results = []
 
-    # 1. Nạp firmware cho MCU
+    # 1. Flash firmware to MCU
     fw_path = "tasks/mcu_fw/mcu_firmware.bin"
     fw_ok, fw_msg = flash_comcu_firmware(fw_path)
     detail_results.append({
@@ -79,7 +79,7 @@ def test_task():
     if not fw_ok:
         return "Failed", "MCU firmware burn error", detail_results
 
-    # 3. (Tùy chọn) Kiểm tra giao tiếp MCU ở đây nếu cần
+    # 2. (Optional) Add more MCU communication checks here if needed
 
     detail_results.append({
         "item": "MCU Test",
