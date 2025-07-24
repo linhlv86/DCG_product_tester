@@ -53,7 +53,7 @@ def flash_comcu_firmware(bin_file, serial_port="/dev/ttyS3"):
         subprocess.run(["/usr/bin/bash", "-c", f"echo 0 > {PWM_CHIP}/unexport"], check=True)
         time.sleep(3)
         # Nạp firmware qua UART
-        cmd = ["stm32flash", "-w", bin_file, "-v", "-g", "0x0", serial_port]
+        cmd = ["/usr/bin/stm32flash", "-w", bin_file, "-v", "-g", "0x0", serial_port]
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             logger.error(f"Lỗi nạp FW: {result.stderr}")
