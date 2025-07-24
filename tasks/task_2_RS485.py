@@ -19,7 +19,7 @@ DESCRIPTION = "RS485 Communication Test"
 # Configuration constants
 GPIO_MODE = [129, 135, 122, 127]
 SERIAL_PORTS = [f"/dev/ttyACM{i}" for i in range(4)]
-BAUD_RATES = [230400, 9600, 38400, 115200]
+BAUD_RATES = [1200, 9600, 38400, 115200]
 global_message = []
 
 TEST_DATA_LEN = 256  # Số byte test, dễ dàng thay đổi

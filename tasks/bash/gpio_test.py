@@ -5,6 +5,9 @@ GP_IOSET = "/usr/bin/gpioset"
 
 # Mapping các GPIO cần điều khiển
 gpio_119 = ("gpiochip3", "23")  # GPIO119
+gpio_121 = ("gpiochip3", "25")  # GPIO121
+
+# Các GPIO khác cần bật/tắt luân phiên
 other_gpios = [
     ("gpiochip4", "5"),   # GPIO133
     ("gpiochip4", "4"),   # GPIO132
@@ -15,11 +18,17 @@ other_gpios = [
 def blink_gpios():
     idx = 0
     gpio119_state = 0
+    gpio121_state = 0
+
 
     while True:
         # Toggle GPIO119
         gpio119_state = 1 - gpio119_state
         subprocess.run([GP_IOSET, gpio_119[0], f"{gpio_119[1]}={gpio119_state}"])
+
+        # Toggle GPIO121
+        gpio121_state = 1 - gpio121_state
+        subprocess.run([GP_IOSET, gpio_121[0], f"{gpio_121[1]}={gpio121_state}"])
 
         # Chỉ bật 1 GPIO trong list, các GPIO còn lại tắt
         for i, gpio in enumerate(other_gpios):
