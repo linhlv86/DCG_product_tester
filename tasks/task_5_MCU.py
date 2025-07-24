@@ -1,13 +1,13 @@
 import subprocess
 import time
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DESCRIPTION = "CoMCU Test"
+DESCRIPTION = "MCU Test"
 
-# Ví dụ: mapping GPIO hoặc serial nếu cần
 CO_MCU_GPIO = 150  # Thay bằng GPIO thực tế
 CO_MCU_SERIAL = "/dev/ttyS1"  # Thay bằng cổng thực tế
 
@@ -28,59 +28,29 @@ def set_gpio(gpio_pin, value):
         logger.error(f"GPIO setting failed: {e}")
         return False, str(e)
 
-def test_comcu():
-    logger.info("=== Starting CoMCU Test ===")
-    detail_results = []
-
-    # 1. Khởi động CoMCU (ví dụ bật nguồn qua GPIO)
-    ok, msg = set_gpio(CO_MCU_GPIO, 1)
-    if not ok:
-        detail_results.append({
-            "item": "Power ON CoMCU",
-            "result": "FAIL",
-            "detail": msg,
-            "passed": False
-        })
-        return "Failed", "Power ON CoMCU error", detail_results
-    logger.info("Power ON CoMCU")
-    time.sleep(2)
-
-    # 2. Kiểm tra giao tiếp CoMCU (ví dụ gửi lệnh qua serial)
-    # Bạn bổ sung đoạn kiểm tra thực tế ở đây
-
-    detail_results.append({
-        "item": "CoMCU Test",
-        "result": "PASS",
-        "detail": "CoMCU test completed",
-        "passed": True
-    })
-    return "Passed", "CoMCU test OK", detail_results
-
 def flash_comcu_firmware(bin_file, serial_port="/dev/ttyS3"):
     PWM_CHIP = "/sys/class/pwm/pwmchip1"
     PWM = f"{PWM_CHIP}/pwm0"
 
-    import os
-
     # Kiểm tra file firmware
     if not bin_file or not os.path.isfile(bin_file):
-        logger.error(f"Lỗi: File không tồn tại hoặc chưa được chỉ định: {bin_file}")
-        return False, "File không tồn tại hoặc chưa được chỉ định"
+        logger.error(f"Error: FW file not found: {bin_file}")
+        return False, "File not found"
 
     try:
         # Export PWM nếu chưa tồn tại
         if not os.path.isdir(PWM):
-            subprocess.run(["bash", "-c", f"echo 0 > {PWM_CHIP}/export"], check=True)
+            subprocess.run(["/usr/bin/bash", "-c", f"echo 0 > {PWM_CHIP}/export"], check=True)
         # Thiết lập period và duty cycle
-        subprocess.run(["bash", "-c", f"echo 10000 > {PWM}/period"], check=True)
-        subprocess.run(["bash", "-c", f"echo 5000 > {PWM}/duty_cycle"], check=True)
+        subprocess.run(["/usr/bin/bash", "-c", f"echo 10000 > {PWM}/period"], check=True)
+        subprocess.run(["/usr/bin/bash", "-c", f"echo 5000 > {PWM}/duty_cycle"], check=True)
         # Bật PWM
-        subprocess.run(["bash", "-c", f"echo 1 > {PWM}/enable"], check=True)
+        subprocess.run(["/usr/bin/bash", "-c", f"echo 1 > {PWM}/enable"], check=True)
         time.sleep(1)
         # Tắt PWM
-        subprocess.run(["bash", "-c", f"echo 0 > {PWM}/enable"], check=True)
+        subprocess.run(["/usr/bin/bash", "-c", f"echo 0 > {PWM}/enable"], check=True)
         # Unexport PWM
-        subprocess.run(["bash", "-c", f"echo 0 > {PWM_CHIP}/unexport"], check=True)
+        subprocess.run(["/usr/bin/bash", "-c", f"echo 0 > {PWM_CHIP}/unexport"], check=True)
         time.sleep(3)
         # Nạp firmware qua UART
         cmd = ["stm32flash", "-w", bin_file, "-v", "-g", "0x0", serial_port]
@@ -95,43 +65,43 @@ def flash_comcu_firmware(bin_file, serial_port="/dev/ttyS3"):
         return False, str(e)
 
 def test_task():
-    logger.info("=== Starting CoMCU Test ===")
+    logger.info("=== Starting MCU Test ===")
     detail_results = []
 
-    # 1. Nạp firmware cho CoMCU
+    # 1. Nạp firmware cho MCU
     fw_path = "tasks/mcu_fw/mcu_firmware.bin"
     fw_ok, fw_msg = flash_comcu_firmware(fw_path)
     detail_results.append({
-        "item": "Flash CoMCU FW",
+        "item": "Flash MCU FW",
         "result": "PASS" if fw_ok else "FAIL",
         "detail": fw_msg,
         "passed": fw_ok
     })
     if not fw_ok:
-        return "Failed", "Nạp firmware CoMCU lỗi", detail_results
+        return "Failed", "MCU firmware burn error", detail_results
 
-    # 2. Khởi động CoMCU (ví dụ bật nguồn qua GPIO)
+    # 2. Khởi động MCU (ví dụ bật nguồn qua GPIO)
     ok, msg = set_gpio(CO_MCU_GPIO, 1)
     if not ok:
         detail_results.append({
-            "item": "Power ON CoMCU",
+            "item": "Power ON MCU",
             "result": "FAIL",
             "detail": msg,
             "passed": False
         })
-        return "Failed", "Power ON CoMCU error", detail_results
-    logger.info("Power ON CoMCU")
+        return "Failed", "Power ON MCU error", detail_results
+    logger.info("Power ON MCU")
     time.sleep(2)
 
-    # 3. (Tùy chọn) Kiểm tra giao tiếp CoMCU ở đây nếu cần
+    # 3. (Tùy chọn) Kiểm tra giao tiếp MCU ở đây nếu cần
 
     detail_results.append({
-        "item": "CoMCU Test",
+        "item": "MCU Test",
         "result": "PASS",
-        "detail": "CoMCU test completed",
+        "detail": "MCU test completed",
         "passed": True
     })
-    return "Passed", "CoMCU test OK", detail_results
+    return "Passed", "MCU test OK", detail_results
 
 if __name__ == "__main__":
     status, detail, results = test_task()
