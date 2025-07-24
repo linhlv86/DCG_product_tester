@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 DESCRIPTION = "MCU Test"
 
-CO_MCU_GPIO = 150  # Thay bằng GPIO thực tế
 CO_MCU_SERIAL = "/dev/ttyS1"  # Thay bằng cổng thực tế
 
 def set_gpio(gpio_pin, value):
@@ -79,19 +78,6 @@ def test_task():
     })
     if not fw_ok:
         return "Failed", "MCU firmware burn error", detail_results
-
-    # 2. Khởi động MCU (ví dụ bật nguồn qua GPIO)
-    ok, msg = set_gpio(CO_MCU_GPIO, 1)
-    if not ok:
-        detail_results.append({
-            "item": "Power ON MCU",
-            "result": "FAIL",
-            "detail": msg,
-            "passed": False
-        })
-        return "Failed", "Power ON MCU error", detail_results
-    logger.info("Power ON MCU")
-    time.sleep(2)
 
     # 3. (Tùy chọn) Kiểm tra giao tiếp MCU ở đây nếu cần
 
