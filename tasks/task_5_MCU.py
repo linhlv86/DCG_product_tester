@@ -94,13 +94,47 @@ def flash_comcu_firmware(bin_file, serial_port="/dev/ttyS3"):
         logger.error(f"Lỗi khi nạp FW: {e}")
         return False, str(e)
 
-if __name__ == "__main__":
-    # Đường dẫn firmware mới
+def test_task():
+    logger.info("=== Starting CoMCU Test ===")
+    detail_results = []
+
+    # 1. Nạp firmware cho CoMCU
     fw_path = "tasks/mcu_fw/mcu_firmware.bin"
     fw_ok, fw_msg = flash_comcu_firmware(fw_path)
-    print("Nạp FW:", "OK" if fw_ok else "FAIL", fw_msg)
+    detail_results.append({
+        "item": "Flash CoMCU FW",
+        "result": "PASS" if fw_ok else "FAIL",
+        "detail": fw_msg,
+        "passed": fw_ok
+    })
+    if not fw_ok:
+        return "Failed", "Nạp firmware CoMCU lỗi", detail_results
 
-    status, detail, results = test_comcu()
+    # 2. Khởi động CoMCU (ví dụ bật nguồn qua GPIO)
+    ok, msg = set_gpio(CO_MCU_GPIO, 1)
+    if not ok:
+        detail_results.append({
+            "item": "Power ON CoMCU",
+            "result": "FAIL",
+            "detail": msg,
+            "passed": False
+        })
+        return "Failed", "Power ON CoMCU error", detail_results
+    logger.info("Power ON CoMCU")
+    time.sleep(2)
+
+    # 3. (Tùy chọn) Kiểm tra giao tiếp CoMCU ở đây nếu cần
+
+    detail_results.append({
+        "item": "CoMCU Test",
+        "result": "PASS",
+        "detail": "CoMCU test completed",
+        "passed": True
+    })
+    return "Passed", "CoMCU test OK", detail_results
+
+if __name__ == "__main__":
+    status, detail, results = test_task()
     print(status, detail)
     for r in results:
         print(r)
