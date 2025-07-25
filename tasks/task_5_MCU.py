@@ -2,6 +2,8 @@ import subprocess
 import time
 import logging
 import os
+import re
+import glob
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,6 +28,13 @@ def set_gpio(gpio_pin, value):
     except Exception as e:
         logger.error(f"GPIO setting failed: {e}")
         return False, str(e)
+
+def get_fw_version(bin_file):
+    # Extract version string from filename: mcu_firmware.[version_string].bin
+    match = re.search(r"mcu_firmware\.([^.]+)\.bin", os.path.basename(bin_file))
+    if match:
+        return match.group(1)
+    return "unknown"
 
 def flash_comcu_firmware(bin_file, serial_port="/dev/ttyS3"):
     PWM_CHIP = "/sys/class/pwm/pwmchip1"
@@ -67,27 +76,46 @@ def test_task():
     logger.info("=== Starting MCU Test ===")
     detail_results = []
 
-    # 1. Flash firmware to MCU
-    fw_path = "tasks/mcu_fw/mcu_firmware.bin"
+    # 1. Find firmware file
+    fw_files = glob.glob("tasks/mcu_fw/mcu_firmware*.bin")
+    if len(fw_files) == 0:
+        detail_results.append({
+            "item": "Find MCU firmware",
+            "result": "FAIL",
+            "detail": "No firmware file found in tasks/mcu_fw/",
+            "passed": False
+        })
+        return "Failed", "No firmware file found", detail_results
+    if len(fw_files) > 1:
+        detail_results.append({
+            "item": "Find MCU firmware",
+            "result": "FAIL",
+            "detail": f"Multiple firmware files found: {fw_files}",
+            "passed": False
+        })
+        return "Failed", "Multiple firmware files found", detail_results
+
+    fw_path = fw_files[0]
+    fw_version = get_fw_version(fw_path)
     fw_ok, fw_msg = flash_comcu_firmware(fw_path)
     detail_results.append({
         "item": "Flash MCU FW",
         "result": "PASS" if fw_ok else "FAIL",
-        "detail": fw_msg,
+        "detail": f"{fw_msg} | Version: {fw_version}",
         "passed": fw_ok
     })
     if not fw_ok:
-        return "Failed", "MCU firmware burn error", detail_results
+        return "Failed", f"MCU firmware burn error | Version: {fw_version}", detail_results
 
     # 2. (Optional) Add more MCU communication checks here if needed
 
     detail_results.append({
         "item": "MCU Test",
         "result": "PASS",
-        "detail": "MCU test completed",
+        "detail": f"MCU test completed | Firmware version: {fw_version}",
         "passed": True
     })
-    return "Passed", "MCU test OK", detail_results
+    return "Passed", f"MCU test OK | Firmware version: {fw_version}", detail_results
 
 if __name__ == "__main__":
     status, detail, results = test_task()
