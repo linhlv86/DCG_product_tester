@@ -105,7 +105,7 @@ def test_task():
         "passed": fw_ok
     })
     if not fw_ok:
-        return "Failed", f"MCU firmware burn error | Version: {fw_version}", detail_results
+        return "Failed", f"MCU firmware flashing error | Version: {fw_version}", detail_results
 
 if __name__ == "__main__":
     status, detail, results = test_task()
