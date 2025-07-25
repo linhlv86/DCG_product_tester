@@ -107,16 +107,6 @@ def test_task():
     if not fw_ok:
         return "Failed", f"MCU firmware burn error | Version: {fw_version}", detail_results
 
-    # 2. (Optional) Add more MCU communication checks here if needed
-
-    detail_results.append({
-        "item": "MCU Test",
-        "result": "PASS",
-        "detail": f"MCU test completed | Firmware version: {fw_version}",
-        "passed": True
-    })
-    return "Passed", f"MCU test OK | Firmware version: {fw_version}", detail_results
-
 if __name__ == "__main__":
     status, detail, results = test_task()
     print(status, detail)
