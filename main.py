@@ -31,33 +31,6 @@ def send_udp_broadcast(port=5005, interval=1):
         udp_socket.sendto(message, ('<broadcast>', port))
         time.sleep(interval)
 
-def auto_git_pull(interval=10):
-    project_dir = os.path.dirname(os.path.abspath(__file__))
-    while True:
-        try:
-            GIT = '/usr/bin/git'
-            
-            # Fetch remote changes
-            fetch_result = subprocess.run([GIT, 'fetch', 'origin'], 
-                                        cwd=project_dir, capture_output=True, text=True)
-            
-            if fetch_result.returncode == 0:
-                # Reset về remote version (luôn luôn, không kiểm tra diff)
-                reset_result = subprocess.run([GIT, 'reset', '--hard', 'origin/main'], 
-                                            cwd=project_dir, capture_output=True, text=True)
-                
-                if reset_result.returncode == 0:
-                    print("Git auto-sync: OK")
-                else:
-                    print(f"Reset thất bại: {reset_result.stderr}")
-            else:
-                print(f"Fetch thất bại: {fetch_result.stderr}")
-                
-        except Exception as e:
-            print(f"Git error: {e}")
-        time.sleep(interval)
-
-
 def start_gpio_blink_process():
     script_path = "/home/orangepi/product_tester/DCG_product_tester/tasks/bash/gpio_test.py"
     try:
@@ -70,12 +43,11 @@ def start_gpio_blink_process():
 threading.Thread(target=send_udp_broadcast, daemon=True).start()
 start_gpio_blink_process()
 
-# Khởi động thread auto pull khi chạy main.py
+# Khởi động ứng dụng
 if __name__ == "__main__":
     threading.Thread(target=send_udp_broadcast, daemon=True).start()
     subprocess.run(["/usr/bin/pkill", "-f", "gpio_test.py"])
     start_gpio_blink_process()
-    threading.Thread(target=auto_git_pull, daemon=True).start()
     print("Starting Flask-SocketIO server...")
     try:
         socketio.run(app, debug=True, host='0.0.0.0', port=80)

@@ -308,6 +308,52 @@ def test_task():
             "passed": False
         })
 
+    # 6. Kiểm tra I2C bus 2
+    logger.info("Step 6: Checking I2C bus 2")
+    try:
+        output = subprocess.check_output(['/usr/sbin/i2cdetect', '-y', '2'], text=True)
+        
+        # Tìm thiết bị 0x68 (có thể hiển thị là "68" hoặc "UU")
+        found_0x68 = False
+        device_status = ""
+        
+        lines = output.strip().split('\n')
+        for line in lines:
+            # Tìm dòng chứa địa chỉ 60-6f (0x68 nằm trong dải này)
+            if line.strip().startswith('60:'):
+                parts = line.split()
+                if len(parts) >= 9:  # parts[0] là "60:", parts[8] là vị trí 0x68
+                    device_at_68 = parts[8]
+                    if device_at_68 in ['68', 'UU']:
+                        found_0x68 = True
+                        device_status = f"Device at 0x68: {device_at_68}"
+                        break
+        
+        if not found_0x68:
+            device_status = "No device found at 0x68"
+        
+        detail = f"I2C bus 2 scan result:\n{output.strip()}\n{device_status}"
+        
+        detail_results.append({
+            "item": "I2C bus 2 (device 0x68)",
+            "result": "PASS" if found_0x68 else "FAIL",
+            "detail": detail,
+            "passed": found_0x68
+        })
+        
+        global global_message
+        global_message.append(detail)
+        logger.info(f"I2C bus 2 check: {'PASS' if found_0x68 else 'FAIL'}")
+        
+    except Exception as e:
+        logger.error(f"I2C bus 2 check failed: {e}")
+        detail_results.append({
+            "item": "I2C bus 2",
+            "result": "FAIL",
+            "detail": f"Error checking I2C bus 2: {str(e)}",
+            "passed": False
+        })
+
     # Tổng kết
     num_pass = sum(1 for r in detail_results if r["passed"])
     num_fail = len(detail_results) - num_pass
