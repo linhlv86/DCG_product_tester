@@ -32,7 +32,15 @@ def send_udp_broadcast(port=5005, interval=1):
         time.sleep(interval)
 
 def start_gpio_blink_process():
-    script_path = "/home/orangepi/product_tester/DCG_product_tester/tasks/bash/gpio_test.py"
+    # Sử dụng đường dẫn tương đối từ thư mục hiện tại
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    script_path = os.path.join(current_dir, "tasks", "bash", "gpio_test.py")
+    
+    # Kiểm tra xem file có tồn tại không trước khi chạy
+    if not os.path.exists(script_path):
+        print(f"GPIO script not found at: {script_path}")
+        return
+        
     try:
         proc = subprocess.Popen(["python3", script_path])
         print(f"Started blink process, pid={proc.pid}")
