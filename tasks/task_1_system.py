@@ -308,13 +308,19 @@ def run_task():
         
         lines = output.strip().split('\n')
         for line in lines:
+            # Tìm dòng chứa địa chỉ 60-6f (0x68 nằm trong dải này)
             if line.strip().startswith('60:'):
                 parts = line.split()
-                if len(parts) >= 9:  # parts[0] là "60:", parts[8] là vị trí 0x68
-                    device_at_68 = parts[8]
+                # parts[0] = "60:", parts[1] = "60", parts[2] = "61", ..., parts[9] = "68"
+                # Vậy 0x68 ở vị trí parts[9] (index 9)
+                if len(parts) >= 10:  # Đảm bảo có đủ phần tử
+                    device_at_68 = parts[9]  # Vị trí 0x68
                     if device_at_68 in ['68', 'UU']:
                         found_0x68 = True
-                        device_status = f"Device at 0x68: {device_at_68}"
+                        if device_at_68 == 'UU':
+                            device_status = "Device at 0x68: UU (in use by driver)"
+                        else:
+                            device_status = "Device at 0x68: 68 (detected)"
                         break
         
         if not found_0x68:
